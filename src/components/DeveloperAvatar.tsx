@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 interface DeveloperAvatarProps {
   name: string;
@@ -28,28 +28,29 @@ function getGradientForName(name: string) {
 }
 
 export default function DeveloperAvatar({ name, avatar, sizeClassName = "h-10 w-10 text-xs", status }: DeveloperAvatarProps) {
+  const [hasError, setHasError] = useState(false);
+
   const initials = name
     ? name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .slice(0, 2)
-        .toUpperCase()
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase()
     : "??";
 
   const gradientClass = getGradientForName(name || "User");
 
   return (
     <div className={`relative shrink-0 select-none ${sizeClassName}`}>
-      {avatar && avatar.startsWith("data:image") ? (
+      {avatar && !hasError ? (
         <img
           src={avatar}
           alt={name}
           className="h-full w-full rounded-xl object-cover ring-1 ring-zinc-200/50 dark:ring-white/10"
           referrerPolicy="no-referrer"
-          onError={(e) => {
-            // If image fails to load, clear it or fallback
-            e.currentTarget.style.display = "none";
+          onError={() => {
+            setHasError(true);
           }}
         />
       ) : (

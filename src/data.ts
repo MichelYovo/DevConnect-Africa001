@@ -1,5 +1,12 @@
 import { Profile, Project, Event } from "./types";
 
+const avatarKoffi = "/src/assets/images/avatar_koffi_mensah_1782487814653.jpg";
+const avatarAbla = "/src/assets/images/avatar_abla_lawson_1782487831921.jpg";
+const avatarFatoumata = "/src/assets/images/avatar_fatoumata_diop_1782487845452.jpg";
+const avatarEnyonam = "/src/assets/images/avatar_enyonam_kpogo_1782487856413.jpg";
+const avatarChinedu = "/src/assets/images/avatar_chinedu_okafor_1782487870160.jpg";
+const avatarMwangi = "/src/assets/images/avatar_mwangi_mwangi_1782487884586.jpg";
+
 export const AFRICAN_COUNTRIES = [
   "Togo",
   "Sénégal",
@@ -17,7 +24,7 @@ export const DEMO_PROFILES: Profile[] = [
   {
     id: "demo-1",
     name: "Koffi Mensah",
-    avatar: "",
+    avatar: avatarKoffi,
     title: "Senior Full Stack Developer",
     bio: "Passionné par l'architecture logicielle et les technologies cloud. Organisateur du Lomé JS Meetup. Mentor pour les jeunes développeurs au Togo et en Afrique de l'Ouest.",
     skills: ["React", "TypeScript", "Node.js", "GraphQL", "Docker", "PostgreSQL"],
@@ -30,7 +37,7 @@ export const DEMO_PROFILES: Profile[] = [
   {
     id: "demo-2",
     name: "Abla Lawson",
-    avatar: "",
+    avatar: avatarAbla,
     title: "UI/UX & Product Designer",
     bio: "Créatrice d'expériences numériques intuitives et engageantes. Je travaille avec les startups africaines pour transformer leurs concepts en interfaces époustouflantes.",
     skills: ["Figma", "UI/UX Design", "Wireframing", "Tailwind CSS", "Prototyping", "Design Systems"],
@@ -43,7 +50,7 @@ export const DEMO_PROFILES: Profile[] = [
   {
     id: "demo-3",
     name: "Fatoumata Diop",
-    avatar: "",
+    avatar: avatarFatoumata,
     title: "AI Researcher & Python Core",
     bio: "Basée à Dakar, Sénégal. Spécialisée dans le NLP appliqué aux langues locales africaines (Wolof, Bambara, Éwé). Fervente partisane de l'IA inclusive.",
     skills: ["Python", "TensorFlow", "NLP", "Machine Learning", "PyTorch", "Flask"],
@@ -56,7 +63,7 @@ export const DEMO_PROFILES: Profile[] = [
   {
     id: "demo-4",
     name: "Enyonam Kpogo",
-    avatar: "",
+    avatar: avatarEnyonam,
     title: "Mobile App Developer",
     bio: "Développeuse Flutter et Swift. J'adore créer des applications mobiles fluides et performantes pour résoudre les défis quotidiens des Africains.",
     skills: ["Flutter", "Dart", "Swift", "Firebase", "App Store Deployment", "Git"],
@@ -69,7 +76,7 @@ export const DEMO_PROFILES: Profile[] = [
   {
     id: "demo-5",
     name: "Chinedu Okafor",
-    avatar: "",
+    avatar: avatarChinedu,
     title: "Backend & Systems Architect",
     bio: "From Lagos, Nigeria. Building scalable concurrent APIs and microservices. Contributor to various open-source distributed systems projects.",
     skills: ["Go", "Rust", "Kubernetes", "Kafka", "PostgreSQL", "gRPC"],
@@ -82,7 +89,7 @@ export const DEMO_PROFILES: Profile[] = [
   {
     id: "demo-6",
     name: "Mwangi Mwangi",
-    avatar: "",
+    avatar: avatarMwangi,
     title: "FinTech Consultant & Web3 Lead",
     bio: "Nairobi, Kenya. Exploring the convergence of mobile money APIs (M-Pesa) and decentralized finance. Blockchain enthusiast.",
     skills: ["Solidity", "TypeScript", "Node.js", "Web3", "Cryptography", "Express"],
@@ -104,11 +111,12 @@ export const DEMO_PROJECTS: Project[] = [
     demoUrl: "https://agromarket.tg",
     authorId: "demo-1",
     authorName: "Koffi Mensah",
-    authorAvatar: "",
+    authorAvatar: avatarKoffi,
     createdAt: "2026-04-10T10:00:00Z",
     likes: 38,
     likedBy: ["demo-3", "demo-4", "demo-5"],
     techStackIdeal: `### 🔮 Architecture Idéale de l'Oracle IA
+
 
 1. **Frontend & SSR** : **Next.js 14+ (App Router)** pour un excellent référencement SEO de vos produits et des performances optimales.
 2. **Paiements Mobiles (Afrique de l'Ouest)** :
@@ -150,7 +158,7 @@ Rejoignez notre révolution verte ! Nous recherchons :
     demoUrl: "https://lometransit.tg",
     authorId: "demo-4",
     authorName: "Enyonam Kpogo",
-    authorAvatar: "",
+    authorAvatar: avatarEnyonam,
     createdAt: "2026-05-15T14:30:00Z",
     likes: 29,
     likedBy: ["demo-1", "demo-2", "demo-5", "demo-6"]
@@ -164,7 +172,7 @@ Rejoignez notre révolution verte ! Nous recherchons :
     demoUrl: "https://afrivoice.sn",
     authorId: "demo-3",
     authorName: "Fatoumata Diop",
-    authorAvatar: "",
+    authorAvatar: avatarFatoumata,
     createdAt: "2026-06-01T09:15:00Z",
     likes: 47,
     likedBy: ["demo-1", "demo-3", "demo-6", "demo-2"]

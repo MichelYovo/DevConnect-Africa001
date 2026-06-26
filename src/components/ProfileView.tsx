@@ -92,9 +92,12 @@ export default function ProfileView() {
 
     const reader = new FileReader();
     reader.onloadend = () => {
-      setAvatar(reader.result as string);
+      const base64Image = reader.result as string;
+      setAvatar(base64Image);
+      // Save immediately to profile to ensure persistence across tab changes and reconnections
+      updateProfile({ avatar: base64Image });
       showToast(
-        language === "FR" ? "Image importée avec succès ! Sauvegardez pour valider." : "Image imported successfully! Save to confirm.",
+        language === "FR" ? "Image de profil mise à jour et enregistrée avec succès !" : "Profile picture updated and saved successfully!",
         "success"
       );
     };
@@ -107,8 +110,10 @@ export default function ProfileView() {
 
   const clearAvatar = () => {
     setAvatar("");
+    // Clear immediately in profile to ensure persistence
+    updateProfile({ avatar: "" });
     showToast(
-      language === "FR" ? "Avatar réinitialisé en initiales de développeur." : "Avatar reset to developer initials.",
+      language === "FR" ? "Photo de profil supprimée et enregistrée avec succès !" : "Profile picture removed and saved successfully!",
       "info"
     );
   };
@@ -252,18 +257,7 @@ export default function ProfileView() {
               </div>
             </div>
 
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-zinc-600 dark:text-zinc-400 block">
-                {getTranslation(language, "avatarUrl")} (Ou importez un fichier à gauche)
-              </label>
-              <input
-                type="url"
-                value={avatar}
-                onChange={(e) => setAvatar(e.target.value)}
-                placeholder="https://..."
-                className="w-full px-4 py-2.5 rounded-xl border border-zinc-200/60 dark:border-white/10 bg-zinc-50/50 dark:bg-zinc-900/50 text-sm focus:border-green-500 outline-none text-zinc-900 dark:text-white"
-              />
-            </div>
+
 
             <div className="border-t border-zinc-100 dark:border-white/5 pt-5 space-y-4">
               <span className="text-xs font-mono font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest block">

@@ -60,17 +60,88 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // Persistence Loading
   const [currentUser, setCurrentUser] = useState<Profile | null>(() => {
     const saved = localStorage.getItem("dc_current_user");
-    return saved ? JSON.parse(saved) : null;
+    if (!saved) return null;
+    try {
+      const p: Profile = JSON.parse(saved);
+      // Check if current user is a demo profile
+      const demoMatch = DEMO_PROFILES.find(dp => dp.id === p.id || dp.name.toLowerCase() === p.name.toLowerCase());
+      if (demoMatch) {
+        return {
+          ...p,
+          ...demoMatch,
+          avatar: demoMatch.avatar
+        };
+      }
+      
+      const isBase64 = p.avatar && p.avatar.startsWith("data:image");
+      const isSocial = p.avatar && (p.avatar.includes("googleusercontent.com") || p.avatar.includes("githubusercontent.com"));
+      if (p.avatar && !isBase64 && !isSocial) {
+        return {
+          ...p,
+          avatar: ""
+        };
+      }
+      return p;
+    } catch {
+      return null;
+    }
   });
 
   const [profiles, setProfiles] = useState<Profile[]>(() => {
     const saved = localStorage.getItem("dc_profiles");
-    return saved ? JSON.parse(saved) : DEMO_PROFILES;
+    const rawList: Profile[] = saved ? JSON.parse(saved) : DEMO_PROFILES;
+    
+    return rawList.map(p => {
+      // Find matching demo profile
+      const demoMatch = DEMO_PROFILES.find(dp => dp.id === p.id || dp.name.toLowerCase() === p.name.toLowerCase());
+      if (demoMatch) {
+        // Force sync all demo data, especially the new avatar
+        return {
+          ...p,
+          ...demoMatch,
+          avatar: demoMatch.avatar // Ensure the new base64/local image is used
+        };
+      }
+      
+      // If it's not a demo profile:
+      // Keep avatar only if it is base64 (data:image) or real social avatar from googleusercontent or githubusercontent
+      const isBase64 = p.avatar && p.avatar.startsWith("data:image");
+      const isSocial = p.avatar && (p.avatar.includes("googleusercontent.com") || p.avatar.includes("githubusercontent.com"));
+      if (p.avatar && !isBase64 && !isSocial) {
+        return {
+          ...p,
+          avatar: ""
+        };
+      }
+      
+      return p;
+    });
   });
 
   const [projects, setProjects] = useState<Project[]>(() => {
     const saved = localStorage.getItem("dc_projects");
-    return saved ? JSON.parse(saved) : DEMO_PROJECTS;
+    const rawList: Project[] = saved ? JSON.parse(saved) : DEMO_PROJECTS;
+    
+    return rawList.map(p => {
+      const demoMatch = DEMO_PROFILES.find(dp => dp.id === p.authorId || dp.name.toLowerCase() === p.authorName.toLowerCase());
+      if (demoMatch) {
+        return {
+          ...p,
+          authorAvatar: demoMatch.avatar
+        };
+      }
+      
+      // If not demo, make sure we only keep base64 or social avatar
+      const isBase64 = p.authorAvatar && p.authorAvatar.startsWith("data:image");
+      const isSocial = p.authorAvatar && (p.authorAvatar.includes("googleusercontent.com") || p.authorAvatar.includes("githubusercontent.com"));
+      if (p.authorAvatar && !isBase64 && !isSocial) {
+        return {
+          ...p,
+          authorAvatar: ""
+        };
+      }
+      return p;
+    });
   });
 
   const [events, setEvents] = useState<Event[]>(() => {
@@ -243,21 +314,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const loginWithGoogleProfile = (profile: Profile) => {
+    // Find if profile already exists in the profiles state to preserve its fields (like custom avatar uploaded)
+    const existing = profiles.find(p => p.email.toLowerCase() === profile.email.toLowerCase());
+    const finalProfile = existing ? { ...existing } : profile;
+
     setProfiles(prev => {
       if (prev.some(p => p.email.toLowerCase() === profile.email.toLowerCase())) {
         return prev;
       }
       return [profile, ...prev];
     });
+
     // Check if they are admin
-    if (profile.email.toLowerCase() === "michelame.yovo@gmail.com") {
-      profile.isAdmin = true;
+    if (finalProfile.email.toLowerCase() === "michelame.yovo@gmail.com") {
+      finalProfile.isAdmin = true;
     }
-    setCurrentUser(profile);
+    setCurrentUser(finalProfile);
     showToast(
       language === "FR" 
-        ? `Bienvenue, ${profile.name} ! Authentifié avec succès via Google API.` 
-        : `Welcome, ${profile.name}! Successfully authenticated via Google API.`, 
+        ? `Bienvenue, ${finalProfile.name} ! Authentifié avec succès.` 
+        : `Welcome, ${finalProfile.name}! Successfully authenticated.`, 
       "success"
     );
     setView("dashboard");

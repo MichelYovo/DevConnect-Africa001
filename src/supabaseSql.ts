@@ -115,7 +115,7 @@ begin
     'Software Engineer',
     'Lomé',
     'Togo',
-    coalesce(new.raw_user_meta_data->>'avatar_url', 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150')
+    coalesce(new.raw_user_meta_data->>'avatar_url', '')
   );
   return new;
 end;
