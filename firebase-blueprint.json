@@ -1,0 +1,161 @@
+{
+  "entities": {
+    "Profile": {
+      "title": "Profile",
+      "description": "User profile representation",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "avatar": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "bio": {
+          "type": "string"
+        },
+        "skills": {
+          "type": "array"
+        },
+        "location": {
+          "type": "string"
+        },
+        "github": {
+          "type": "string"
+        },
+        "linkedin": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "isAdmin": {
+          "type": "boolean"
+        },
+        "password": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email"
+      ]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "Project representation",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "techStack": {
+          "type": "array"
+        },
+        "githubUrl": {
+          "type": "string"
+        },
+        "demoUrl": {
+          "type": "string"
+        },
+        "authorId": {
+          "type": "string"
+        },
+        "authorName": {
+          "type": "string"
+        },
+        "authorAvatar": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "likes": {
+          "type": "number"
+        },
+        "likedBy": {
+          "type": "array"
+        },
+        "techStackIdeal": {
+          "type": "string"
+        },
+        "pitchDeck": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "authorId",
+        "createdAt"
+      ]
+    },
+    "Event": {
+      "title": "Event",
+      "description": "Event representation",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "location": {
+          "type": "string"
+        },
+        "venue": {
+          "type": "string"
+        },
+        "organizer": {
+          "type": "string"
+        },
+        "organizerId": {
+          "type": "string"
+        },
+        "attendees": {
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "organizerId",
+        "date"
+      ]
+    }
+  },
+  "firestore": {
+    "profiles/{profileId}": {
+      "schema": "Profile",
+      "description": "Developer profiles"
+    },
+    "projects/{projectId}": {
+      "schema": "Project",
+      "description": "Shared projects"
+    },
+    "events/{eventId}": {
+      "schema": "Event",
+      "description": "Community events"
+    }
+  }
+}

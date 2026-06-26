@@ -67,19 +67,19 @@ export default function AuthView() {
   const [otpError, setOtpError] = useState("");
   const [otpCountdown, setOtpCountdown] = useState(120);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg("");
     setLoading(true);
 
-    setTimeout(() => {
+    try {
       if (isLogin) {
         if (!email) {
           setErrorMsg(language === "FR" ? "Veuillez entrer votre adresse email." : "Please enter your email address.");
           setLoading(false);
           return;
         }
-        const res = login(email, password);
+        const res = await login(email, password);
         if (!res.success) {
           setErrorMsg(res.error || "Error");
         }
@@ -95,22 +95,28 @@ export default function AuthView() {
           return;
         }
         const locationStr = city.trim() ? `${city.trim()}, ${country}` : country;
-        const res = registerUser(name, email, password, locationStr);
+        const res = await registerUser(name, email, password, locationStr);
         if (!res.success) {
           setErrorMsg(res.error || "Error");
         }
       }
+    } catch (err: any) {
+      setErrorMsg(err.message || "An unexpected error occurred.");
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
 
   // Quick sign-in as a Togolese Demo Persona
-  const handleDemoSignIn = (demoEmail: string) => {
+  const handleDemoSignIn = async (demoEmail: string) => {
     setLoading(true);
-    setTimeout(() => {
-      login(demoEmail);
+    try {
+      await login(demoEmail);
+    } catch (err) {
+      console.error(err);
+    } finally {
       setLoading(false);
-    }, 400);
+    }
   };
 
   // Unified Social Login Dialog Event Handlers & API integrations

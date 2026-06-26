@@ -1,6 +1,17 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Profile, Project, Event, Language, Theme, ViewType } from "../types";
 import { DEMO_PROFILES, DEMO_PROJECTS, DEMO_EVENTS } from "../data";
+import { db, handleFirestoreError, OperationType } from "../firebase";
+import { 
+  collection, 
+  onSnapshot, 
+  doc, 
+  setDoc, 
+  deleteDoc, 
+  updateDoc, 
+  getDocs, 
+  writeBatch 
+} from "firebase/firestore";
 
 interface AppContextProps {
   currentUser: Profile | null;
@@ -23,29 +34,29 @@ interface AppContextProps {
   setTogoOnly: (val: boolean) => void;
   
   // Auth
-  login: (email: string, password?: string) => { success: boolean; error?: string };
-  registerUser: (name: string, email: string, password?: string, location?: string) => { success: boolean; error?: string };
-  loginWithGoogleProfile: (profile: Profile) => void;
+  login: (email: string, password?: string) => Promise<{ success: boolean; error?: string }>;
+  registerUser: (name: string, email: string, password?: string, location?: string) => Promise<{ success: boolean; error?: string }>;
+  loginWithGoogleProfile: (profile: Profile) => Promise<void>;
   logout: () => void;
   
   // Profile
-  updateProfile: (updated: Partial<Profile>) => { success: boolean };
+  updateProfile: (updated: Partial<Profile>) => Promise<{ success: boolean }>;
   
   // Projects CRUD
-  createProject: (project: Omit<Project, "id" | "authorId" | "authorName" | "authorAvatar" | "createdAt" | "likes" | "likedBy">) => void;
-  updateProject: (id: string, updated: Partial<Project>) => void;
-  deleteProject: (id: string) => void;
-  toggleLikeProject: (id: string) => void;
+  createProject: (project: Omit<Project, "id" | "authorId" | "authorName" | "authorAvatar" | "createdAt" | "likes" | "likedBy">) => Promise<void>;
+  updateProject: (id: string, updated: Partial<Project>) => Promise<void>;
+  deleteProject: (id: string) => Promise<void>;
+  toggleLikeProject: (id: string) => Promise<void>;
   
   // Events
-  createEvent: (event: Omit<Event, "id" | "organizerId" | "organizer" | "attendees">) => void;
-  toggleAttendEvent: (id: string) => void;
-  deleteEvent: (id: string) => void;
+  createEvent: (event: Omit<Event, "id" | "organizerId" | "organizer" | "attendees">) => Promise<void>;
+  toggleAttendEvent: (id: string) => Promise<void>;
+  deleteEvent: (id: string) => Promise<void>;
   
   // Profiles Management
-  addProfile: (profile: Profile) => void;
-  deleteProfile: (id: string) => void;
-  toggleAdminStatus: (id: string, isNowAdmin: boolean) => void;
+  addProfile: (profile: Profile) => Promise<void>;
+  deleteProfile: (id: string) => Promise<void>;
+  toggleAdminStatus: (id: string, isNowAdmin: boolean) => Promise<void>;
   
   // Simulator triggers
   triggerConfetti: () => void;
@@ -57,31 +68,12 @@ interface AppContextProps {
 const AppContext = createContext<AppContextProps | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  // Persistence Loading
+  // Local persistence for session, language, theme
   const [currentUser, setCurrentUser] = useState<Profile | null>(() => {
     const saved = localStorage.getItem("dc_current_user");
     if (!saved) return null;
     try {
-      const p: Profile = JSON.parse(saved);
-      // Check if current user is a demo profile
-      const demoMatch = DEMO_PROFILES.find(dp => dp.id === p.id || dp.name.toLowerCase() === p.name.toLowerCase());
-      if (demoMatch) {
-        return {
-          ...p,
-          ...demoMatch,
-          avatar: demoMatch.avatar
-        };
-      }
-      
-      const isBase64 = p.avatar && p.avatar.startsWith("data:image");
-      const isSocial = p.avatar && (p.avatar.includes("googleusercontent.com") || p.avatar.includes("githubusercontent.com"));
-      if (p.avatar && !isBase64 && !isSocial) {
-        return {
-          ...p,
-          avatar: ""
-        };
-      }
-      return p;
+      return JSON.parse(saved);
     } catch {
       return null;
     }
@@ -89,59 +81,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const [profiles, setProfiles] = useState<Profile[]>(() => {
     const saved = localStorage.getItem("dc_profiles");
-    const rawList: Profile[] = saved ? JSON.parse(saved) : DEMO_PROFILES;
-    
-    return rawList.map(p => {
-      // Find matching demo profile
-      const demoMatch = DEMO_PROFILES.find(dp => dp.id === p.id || dp.name.toLowerCase() === p.name.toLowerCase());
-      if (demoMatch) {
-        // Force sync all demo data, especially the new avatar
-        return {
-          ...p,
-          ...demoMatch,
-          avatar: demoMatch.avatar // Ensure the new base64/local image is used
-        };
-      }
-      
-      // If it's not a demo profile:
-      // Keep avatar only if it is base64 (data:image) or real social avatar from googleusercontent or githubusercontent
-      const isBase64 = p.avatar && p.avatar.startsWith("data:image");
-      const isSocial = p.avatar && (p.avatar.includes("googleusercontent.com") || p.avatar.includes("githubusercontent.com"));
-      if (p.avatar && !isBase64 && !isSocial) {
-        return {
-          ...p,
-          avatar: ""
-        };
-      }
-      
-      return p;
-    });
+    return saved ? JSON.parse(saved) : DEMO_PROFILES;
   });
 
   const [projects, setProjects] = useState<Project[]>(() => {
     const saved = localStorage.getItem("dc_projects");
-    const rawList: Project[] = saved ? JSON.parse(saved) : DEMO_PROJECTS;
-    
-    return rawList.map(p => {
-      const demoMatch = DEMO_PROFILES.find(dp => dp.id === p.authorId || dp.name.toLowerCase() === p.authorName.toLowerCase());
-      if (demoMatch) {
-        return {
-          ...p,
-          authorAvatar: demoMatch.avatar
-        };
-      }
-      
-      // If not demo, make sure we only keep base64 or social avatar
-      const isBase64 = p.authorAvatar && p.authorAvatar.startsWith("data:image");
-      const isSocial = p.authorAvatar && (p.authorAvatar.includes("googleusercontent.com") || p.authorAvatar.includes("githubusercontent.com"));
-      if (p.authorAvatar && !isBase64 && !isSocial) {
-        return {
-          ...p,
-          authorAvatar: ""
-        };
-      }
-      return p;
-    });
+    return saved ? JSON.parse(saved) : DEMO_PROJECTS;
   });
 
   const [events, setEvents] = useState<Event[]>(() => {
@@ -156,7 +101,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const [theme, setThemeState] = useState<Theme>(() => {
     const saved = localStorage.getItem("dc_theme");
-    return (saved as Theme) || "dark"; // Defaulting to an elegant Dark Theme (Vercel-style)
+    return (saved as Theme) || "dark";
   });
 
   const [currentView, setCurrentView] = useState<ViewType>("landing");
@@ -165,22 +110,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [togoOnlyFilter, setTogoOnlyFilter] = useState<boolean>(true);
   const [toastMessage, setToastMessage] = useState<{ text: string; type: "success" | "error" | "info" } | null>(null);
 
-  // Sync to localStorage
+  // Sync basic settings to localStorage
   useEffect(() => {
     localStorage.setItem("dc_current_user", currentUser ? JSON.stringify(currentUser) : "");
   }, [currentUser]);
-
-  useEffect(() => {
-    localStorage.setItem("dc_profiles", JSON.stringify(profiles));
-  }, [profiles]);
-
-  useEffect(() => {
-    localStorage.setItem("dc_projects", JSON.stringify(projects));
-  }, [projects]);
-
-  useEffect(() => {
-    localStorage.setItem("dc_events", JSON.stringify(events));
-  }, [events]);
 
   useEffect(() => {
     localStorage.setItem("dc_language", language);
@@ -191,7 +124,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     applyTheme(theme);
   }, [theme]);
 
-  // Handle system dark mode changes dynamically
   useEffect(() => {
     if (theme === "system") {
       const media = window.matchMedia("(prefers-color-scheme: dark)");
@@ -200,6 +132,107 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return () => media.removeEventListener("change", listener);
     }
   }, [theme]);
+
+  // Seeding helper to populate blank Firestore databases
+  const seedDatabase = async () => {
+    try {
+      console.log("Seeding database...");
+      const batch = writeBatch(db);
+      
+      DEMO_PROFILES.forEach((profile) => {
+        const isAdmin = profile.email.toLowerCase() === "michelame.yovo@gmail.com";
+        const password = isAdmin ? "DevConnectAdmin2026" : "devconnect123";
+        const docRef = doc(db, "profiles", profile.id);
+        batch.set(docRef, {
+          ...profile,
+          isAdmin,
+          password
+        });
+      });
+      
+      DEMO_PROJECTS.forEach((project) => {
+        const docRef = doc(db, "projects", project.id);
+        batch.set(docRef, project);
+      });
+
+      DEMO_EVENTS.forEach((evt) => {
+        const docRef = doc(db, "events", evt.id);
+        batch.set(docRef, evt);
+      });
+
+      await batch.commit();
+      console.log("Database seeded successfully!");
+    } catch (err) {
+      console.error("Error seeding Firestore database:", err);
+      handleFirestoreError(err, OperationType.WRITE, "seed-batch");
+    }
+  };
+
+  // Subscribe to real-time Firestore updates
+  useEffect(() => {
+    // 1. Subscribe to profiles collection
+    const unsubscribeProfiles = onSnapshot(collection(db, "profiles"), (snapshot) => {
+      const list: Profile[] = [];
+      snapshot.forEach((docSnap) => {
+        list.push({ id: docSnap.id, ...docSnap.data() } as Profile);
+      });
+      
+      if (list.length === 0) {
+        seedDatabase();
+      } else {
+        setProfiles(list);
+        localStorage.setItem("dc_profiles", JSON.stringify(list));
+        
+        // Update local session details in case profile was updated elsewhere
+        if (currentUser) {
+          const freshUser = list.find(p => p.id === currentUser.id);
+          if (freshUser) {
+            setCurrentUser(freshUser);
+          }
+        }
+      }
+    }, (error) => {
+      console.error("Profiles subscription error:", error);
+      handleFirestoreError(error, OperationType.GET, "profiles");
+    });
+
+    // 2. Subscribe to projects collection
+    const unsubscribeProjects = onSnapshot(collection(db, "projects"), (snapshot) => {
+      const list: Project[] = [];
+      snapshot.forEach((docSnap) => {
+        list.push({ id: docSnap.id, ...docSnap.data() } as Project);
+      });
+      
+      // Sort projects by creation date descending
+      list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
+      setProjects(list);
+      localStorage.setItem("dc_projects", JSON.stringify(list));
+    }, (error) => {
+      console.error("Projects subscription error:", error);
+      handleFirestoreError(error, OperationType.GET, "projects");
+    });
+
+    // 3. Subscribe to events collection
+    const unsubscribeEvents = onSnapshot(collection(db, "events"), (snapshot) => {
+      const list: Event[] = [];
+      snapshot.forEach((docSnap) => {
+        list.push({ id: docSnap.id, ...docSnap.data() } as Event);
+      });
+      
+      setEvents(list);
+      localStorage.setItem("dc_events", JSON.stringify(list));
+    }, (error) => {
+      console.error("Events subscription error:", error);
+      handleFirestoreError(error, OperationType.GET, "events");
+    });
+
+    return () => {
+      unsubscribeProfiles();
+      unsubscribeProjects();
+      unsubscribeEvents();
+    };
+  }, [currentUser?.id]);
 
   const applyTheme = (t: Theme) => {
     const root = document.documentElement;
@@ -223,7 +256,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const setView = (view: ViewType) => {
     setCurrentView(view);
-    // Smooth scroll back to top of main area
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -233,110 +265,176 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const setSkillQuery = (query: string) => setSearchSkillQuery(query);
   const setTogoOnly = (val: boolean) => setTogoOnlyFilter(val);
 
-  // Authentication Mock with local storage persistence
-  const login = (email: string, password?: string) => {
-    // Check if it's one of our demo profiles
-    const foundDemo = profiles.find(p => p.email.toLowerCase() === email.trim().toLowerCase());
-    if (foundDemo) {
-      setCurrentUser(foundDemo);
-      showToast(language === "FR" ? `Ravi de vous revoir, ${foundDemo.name} !` : `Welcome back, ${foundDemo.name}!`, "success");
-      setView("dashboard");
-      return { success: true };
-    }
-    
-    // Check other registered profiles
-    const foundUser = profiles.find(p => p.email.toLowerCase() === email.trim().toLowerCase());
-    if (foundUser) {
-      if (email.toLowerCase() === "michelame.yovo@gmail.com") {
-        foundUser.isAdmin = true;
+  // Firestore persistent authentication
+  const login = async (emailStr: string, passwordStr?: string) => {
+    const trimmedEmail = emailStr.trim().toLowerCase();
+    const enteredPassword = passwordStr || "";
+    const isAdminEmail = trimmedEmail === "michelame.yovo@gmail.com";
+
+    // Enforce secure unique administrator password
+    if (isAdminEmail) {
+      if (enteredPassword !== "DevConnectAdmin2026") {
+        return { 
+          success: false, 
+          error: language === "FR" 
+            ? "Mot de passe administrateur incorrect." 
+            : "Incorrect administrator password." 
+        };
       }
-      setCurrentUser(foundUser);
-      showToast(language === "FR" ? `Connexion réussie, ${foundUser.name} !` : `Successfully logged in, ${foundUser.name}!`, "success");
+    }
+
+    // Lookup profile in loaded profiles
+    let foundProfile = profiles.find(p => p.email.toLowerCase() === trimmedEmail);
+
+    if (foundProfile) {
+      const storedPassword = (foundProfile as any).password || "";
+      if (storedPassword && enteredPassword !== storedPassword && !isAdminEmail) {
+        return { 
+          success: false, 
+          error: language === "FR" 
+            ? "Mot de passe incorrect." 
+            : "Incorrect password." 
+        };
+      }
+
+      // Automatically upgrade admin flag in Firestore if not yet set
+      if (isAdminEmail && !foundProfile.isAdmin) {
+        foundProfile.isAdmin = true;
+        await setDoc(doc(db, "profiles", foundProfile.id), { ...foundProfile, isAdmin: true, password: "DevConnectAdmin2026" }, { merge: true });
+      }
+
+      setCurrentUser(foundProfile);
+      showToast(
+        language === "FR" 
+          ? `Ravi de vous revoir, ${foundProfile.name} !` 
+          : `Welcome back, ${foundProfile.name}!`, 
+        "success"
+      );
       setView("dashboard");
       return { success: true };
     }
 
-    // Default simulation fallback for ANY email to guarantee seamless UX
-    const simpleName = email.split("@")[0];
+    // Auto-registration fallback for easy UX (registers new user in Firestore)
+    const simpleName = trimmedEmail.split("@")[0];
     const formattedName = simpleName.charAt(0).toUpperCase() + simpleName.slice(1);
-    const newSimulatedProfile: Profile = {
-      id: `user-${Date.now()}`,
-      name: formattedName,
+    
+    const newUserProfile: Profile = {
+      id: isAdminEmail ? "admin-michel" : `user-${Date.now()}`,
+      name: isAdminEmail ? "Michel Ame Yovo (Admin)" : formattedName,
       avatar: "",
-      title: email.toLowerCase() === "michelame.yovo@gmail.com" ? "Administrateur Chef de Projet" : "Full Stack Engineer",
-      bio: email.toLowerCase() === "michelame.yovo@gmail.com" ? "Administrateur principal du hub de l'écosystème tech africain." : "Nouveau membre de la communauté tech africaine !",
-      skills: email.toLowerCase() === "michelame.yovo@gmail.com" ? ["Gouvernance", "Supabase", "React", "Africa Tech Management"] : ["React", "JavaScript", "Tailwind CSS"],
-      location: "Dakar, Sénégal",
+      title: isAdminEmail ? "Administrateur Chef de Projet" : "Full Stack Engineer",
+      bio: isAdminEmail 
+        ? "Administrateur principal du hub de l'écosystème tech africain." 
+        : "Nouveau membre de la communauté tech africaine !",
+      skills: isAdminEmail 
+        ? ["Gouvernance", "React", "Africa Tech Management", "Firebase"] 
+        : ["React", "JavaScript", "Tailwind CSS"],
+      location: "Lomé, Togo",
       github: "https://github.com",
       linkedin: "https://linkedin.com",
-      email: email,
-      isAdmin: email.toLowerCase() === "michelame.yovo@gmail.com"
+      email: trimmedEmail,
+      isAdmin: isAdminEmail
     };
-    
-    setProfiles(prev => [newSimulatedProfile, ...prev]);
-    setCurrentUser(newSimulatedProfile);
-    showToast(language === "FR" ? `Nouveau profil créé et connecté ! Bienvenue !` : `New profile created and logged in! Welcome!`, "success");
-    setView("dashboard");
-    return { success: true };
+
+    try {
+      await setDoc(doc(db, "profiles", newUserProfile.id), {
+        ...newUserProfile,
+        password: isAdminEmail ? "DevConnectAdmin2026" : (enteredPassword || "devconnect123")
+      });
+      
+      setCurrentUser(newUserProfile);
+      showToast(
+        language === "FR" 
+          ? `Nouveau profil créé et connecté ! Bienvenue !` 
+          : `New profile created and logged in! Welcome!`, 
+        "success"
+      );
+      setView("dashboard");
+      return { success: true };
+    } catch (err: any) {
+      console.error("Error auto-registering user in Firestore:", err);
+      handleFirestoreError(err, OperationType.WRITE, `profiles/${newUserProfile.id}`);
+    }
   };
 
-  const registerUser = (name: string, email: string, password?: string, location?: string) => {
+  const registerUser = async (name: string, email: string, password?: string, location?: string) => {
     if (!name || !email) {
       return { success: false, error: "Please provide both name and email" };
     }
     
-    // Check duplicate
-    if (profiles.some(p => p.email.toLowerCase() === email.trim().toLowerCase())) {
+    const trimmedEmail = email.trim().toLowerCase();
+    
+    if (profiles.some(p => p.email.toLowerCase() === trimmedEmail)) {
       return { success: false, error: "Email already exists" };
     }
 
     const defaultLoc = location || "Dakar, Sénégal";
+    const isAdminEmail = trimmedEmail === "michelame.yovo@gmail.com";
 
     const newUser: Profile = {
-      id: `user-${Date.now()}`,
-      name,
+      id: isAdminEmail ? "admin-michel" : `user-${Date.now()}`,
+      name: name.trim(),
       avatar: "",
-      title: email.toLowerCase() === "michelame.yovo@gmail.com" ? "Administrateur Chef de Projet" : "Junior Web Developer",
-      bio: email.toLowerCase() === "michelame.yovo@gmail.com" ? "Administrateur principal du hub de l'écosystème tech africain." : `Développeur passionné basé à ${defaultLoc}, désireux d'élargir mes compétences et de collaborer sur de superbes projets à travers l'Afrique.`,
-      skills: email.toLowerCase() === "michelame.yovo@gmail.com" ? ["Gouvernance", "Supabase", "React"] : ["HTML", "CSS", "JavaScript"],
+      title: isAdminEmail ? "Administrateur Chef de Projet" : "Junior Web Developer",
+      bio: isAdminEmail 
+        ? "Administrateur principal du hub de l'écosystème tech africain." 
+        : `Développeur passionné basé à ${defaultLoc}, désireux d'élargir mes compétences et de collaborer sur de superbes projets à travers l'Afrique.`,
+      skills: isAdminEmail ? ["Gouvernance", "React", "Firebase"] : ["HTML", "CSS", "JavaScript"],
       location: defaultLoc,
       github: "",
       linkedin: "",
-      email,
-      isAdmin: email.toLowerCase() === "michelame.yovo@gmail.com"
+      email: trimmedEmail,
+      isAdmin: isAdminEmail
     };
 
-    setProfiles(prev => [newUser, ...prev]);
-    setCurrentUser(newUser);
-    showToast(language === "FR" ? `Compte créé avec succès ! Bienvenue sur DevConnect Africa !` : `Account created successfully! Welcome to DevConnect Africa!`, "success");
-    setView("dashboard");
-    return { success: true };
+    try {
+      await setDoc(doc(db, "profiles", newUser.id), {
+        ...newUser,
+        password: password || (isAdminEmail ? "DevConnectAdmin2026" : "devconnect123")
+      });
+
+      setCurrentUser(newUser);
+      showToast(
+        language === "FR" 
+          ? `Compte créé avec succès ! Bienvenue sur DevConnect Africa !` 
+          : `Account created successfully! Welcome to DevConnect Africa!`, 
+        "success"
+      );
+      setView("dashboard");
+      return { success: true };
+    } catch (err: any) {
+      console.error("Error registering user in Firestore:", err);
+      handleFirestoreError(err, OperationType.WRITE, `profiles/${newUser.id}`);
+    }
   };
 
-  const loginWithGoogleProfile = (profile: Profile) => {
-    // Find if profile already exists in the profiles state to preserve its fields (like custom avatar uploaded)
-    const existing = profiles.find(p => p.email.toLowerCase() === profile.email.toLowerCase());
+  const loginWithGoogleProfile = async (profile: Profile) => {
+    const trimmedEmail = profile.email.toLowerCase();
+    const existing = profiles.find(p => p.email.toLowerCase() === trimmedEmail);
     const finalProfile = existing ? { ...existing } : profile;
-
-    setProfiles(prev => {
-      if (prev.some(p => p.email.toLowerCase() === profile.email.toLowerCase())) {
-        return prev;
-      }
-      return [profile, ...prev];
-    });
-
-    // Check if they are admin
+    
     if (finalProfile.email.toLowerCase() === "michelame.yovo@gmail.com") {
       finalProfile.isAdmin = true;
     }
-    setCurrentUser(finalProfile);
-    showToast(
-      language === "FR" 
-        ? `Bienvenue, ${finalProfile.name} ! Authentifié avec succès.` 
-        : `Welcome, ${finalProfile.name}! Successfully authenticated.`, 
-      "success"
-    );
-    setView("dashboard");
+
+    try {
+      await setDoc(doc(db, "profiles", finalProfile.id), {
+        ...finalProfile,
+        password: finalProfile.isAdmin ? "DevConnectAdmin2026" : "google-oauth"
+      }, { merge: true });
+
+      setCurrentUser(finalProfile);
+      showToast(
+        language === "FR" 
+          ? `Bienvenue, ${finalProfile.name} ! Authentifié avec succès.` 
+          : `Welcome, ${finalProfile.name}! Successfully authenticated.`, 
+        "success"
+      );
+      setView("dashboard");
+    } catch (err) {
+      console.error("Error saving Google profile to Firestore:", err);
+      handleFirestoreError(err, OperationType.WRITE, `profiles/${finalProfile.id}`);
+    }
   };
 
   const logout = () => {
@@ -345,34 +443,39 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setView("landing");
   };
 
-  // Profile Updating
-  const updateProfile = (updated: Partial<Profile>) => {
+  const updateProfile = async (updated: Partial<Profile>) => {
     if (!currentUser) return { success: false };
 
     const updatedProfile = { ...currentUser, ...updated };
-    setCurrentUser(updatedProfile);
-
-    // Sync back to profiles array
-    setProfiles(prev => prev.map(p => p.id === currentUser.id ? updatedProfile : p));
     
-    // Sync any user projects names and avatars
-    setProjects(prev => prev.map(p => p.authorId === currentUser.id ? {
-      ...p,
-      authorName: updatedProfile.name,
-      authorAvatar: updatedProfile.avatar
-    } : p));
+    try {
+      await setDoc(doc(db, "profiles", currentUser.id), updatedProfile, { merge: true });
+      setCurrentUser(updatedProfile);
 
-    showToast(language === "FR" ? "Profil enregistré !" : "Profile saved successfully!", "success");
-    return { success: true };
+      // Propagate changes to user's projects in real-time
+      const userProjects = projects.filter(p => p.authorId === currentUser.id);
+      for (const p of userProjects) {
+        await updateDoc(doc(db, "projects", p.id), {
+          authorName: updatedProfile.name,
+          authorAvatar: updatedProfile.avatar
+        });
+      }
+
+      showToast(language === "FR" ? "Profil enregistré !" : "Profile saved successfully!", "success");
+      return { success: true };
+    } catch (err) {
+      console.error("Error updating profile in Firestore:", err);
+      handleFirestoreError(err, OperationType.WRITE, `profiles/${currentUser.id}`);
+    }
   };
 
-  // Projects CRUD
-  const createProject = (projectData: Omit<Project, "id" | "authorId" | "authorName" | "authorAvatar" | "createdAt" | "likes" | "likedBy">) => {
+  const createProject = async (projectData: Omit<Project, "id" | "authorId" | "authorName" | "authorAvatar" | "createdAt" | "likes" | "likedBy">) => {
     if (!currentUser) return;
 
+    const projectId = `proj-${Date.now()}`;
     const newProject: Project = {
       ...projectData,
-      id: `proj-${Date.now()}`,
+      id: projectId,
       authorId: currentUser.id,
       authorName: currentUser.name,
       authorAvatar: currentUser.avatar,
@@ -381,115 +484,167 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       likedBy: []
     };
 
-    setProjects(prev => [newProject, ...prev]);
-    showToast(language === "FR" ? "Projet partagé avec succès !" : "Project published successfully!", "success");
+    try {
+      await setDoc(doc(db, "projects", projectId), newProject);
+      showToast(language === "FR" ? "Projet partagé avec succès !" : "Project published successfully!", "success");
+    } catch (err) {
+      console.error("Error creating project in Firestore:", err);
+      handleFirestoreError(err, OperationType.CREATE, `projects/${projectId}`);
+    }
   };
 
-  const updateProject = (id: string, updated: Partial<Project>) => {
-    setProjects(prev => prev.map(p => p.id === id ? { ...p, ...updated } as Project : p));
-    showToast(language === "FR" ? "Projet modifié avec succès !" : "Project updated successfully!", "success");
+  const updateProject = async (id: string, updated: Partial<Project>) => {
+    try {
+      await updateDoc(doc(db, "projects", id), updated);
+      showToast(language === "FR" ? "Projet modifié avec succès !" : "Project updated successfully!", "success");
+    } catch (err) {
+      console.error("Error updating project in Firestore:", err);
+      handleFirestoreError(err, OperationType.UPDATE, `projects/${id}`);
+    }
   };
 
-  const deleteProject = (id: string) => {
-    setProjects(prev => prev.filter(p => p.id !== id));
-    showToast(language === "FR" ? "Projet supprimé !" : "Project deleted!", "info");
+  const deleteProject = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, "projects", id));
+      showToast(language === "FR" ? "Projet supprimé !" : "Project deleted!", "info");
+    } catch (err) {
+      console.error("Error deleting project from Firestore:", err);
+      handleFirestoreError(err, OperationType.DELETE, `projects/${id}`);
+    }
   };
 
-  const toggleLikeProject = (id: string) => {
+  const toggleLikeProject = async (id: string) => {
     if (!currentUser) {
       showToast(language === "FR" ? "Veuillez vous connecter pour aimer un projet." : "Please log in to like a project.", "error");
       return;
     }
 
-    setProjects(prev => prev.map(proj => {
-      if (proj.id !== id) return proj;
+    const proj = projects.find(p => p.id === id);
+    if (!proj) return;
 
-      const alreadyLiked = proj.likedBy.includes(currentUser.id);
-      let newLikedBy = [];
-      if (alreadyLiked) {
-        newLikedBy = proj.likedBy.filter(uid => uid !== currentUser.id);
-      } else {
-        newLikedBy = [...proj.likedBy, currentUser.id];
-      }
+    const alreadyLiked = proj.likedBy.includes(currentUser.id);
+    let newLikedBy = [];
+    if (alreadyLiked) {
+      newLikedBy = proj.likedBy.filter(uid => uid !== currentUser.id);
+    } else {
+      newLikedBy = [...proj.likedBy, currentUser.id];
+    }
 
-      return {
-        ...proj,
+    try {
+      await updateDoc(doc(db, "projects", id), {
         likedBy: newLikedBy,
         likes: newLikedBy.length
-      };
-    }));
+      });
+    } catch (err) {
+      console.error("Error liking project in Firestore:", err);
+      handleFirestoreError(err, OperationType.UPDATE, `projects/${id}`);
+    }
   };
 
-  // Events attending
-  const createEvent = (eventData: Omit<Event, "id" | "organizerId" | "organizer" | "attendees">) => {
+  const createEvent = async (eventData: Omit<Event, "id" | "organizerId" | "organizer" | "attendees">) => {
     if (!currentUser) return;
 
+    const eventId = `evt-${Date.now()}`;
     const newEvent: Event = {
       ...eventData,
-      id: `evt-${Date.now()}`,
+      id: eventId,
       organizer: currentUser.name,
       organizerId: currentUser.id,
       attendees: [currentUser.id]
     };
 
-    setEvents(prev => [newEvent, ...prev]);
-    showToast(language === "FR" ? "Événement programmé avec succès !" : "Event scheduled successfully!", "success");
+    try {
+      await setDoc(doc(db, "events", eventId), newEvent);
+      showToast(language === "FR" ? "Événement programmé avec succès !" : "Event scheduled successfully!", "success");
+    } catch (err) {
+      console.error("Error creating event in Firestore:", err);
+      handleFirestoreError(err, OperationType.CREATE, `events/${eventId}`);
+    }
   };
 
-  const toggleAttendEvent = (id: string) => {
+  const toggleAttendEvent = async (id: string) => {
     if (!currentUser) {
       showToast(language === "FR" ? "Veuillez vous connecter pour participer." : "Please log in to participate.", "error");
       return;
     }
 
-    setEvents(prev => prev.map(evt => {
-      if (evt.id !== id) return evt;
+    const evt = events.find(e => e.id === id);
+    if (!evt) return;
 
-      const attending = evt.attendees.includes(currentUser.id);
-      let newAttendees = [];
-      if (attending) {
-        newAttendees = evt.attendees.filter(uid => uid !== currentUser.id);
-        showToast(language === "FR" ? "Votre participation a été annulée." : "Your participation was canceled.", "info");
-      } else {
-        newAttendees = [...evt.attendees, currentUser.id];
-        showToast(language === "FR" ? "Vous êtes inscrit à cet événement !" : "You are registered for this event!", "success");
-      }
-
-      return {
-        ...evt,
-        attendees: newAttendees
-      };
-    }));
-  };
-
-  const deleteEvent = (id: string) => {
-    setEvents(prev => prev.filter(e => e.id !== id));
-    showToast(language === "FR" ? "Événement supprimé !" : "Event deleted!", "info");
-  };
-
-  const addProfile = (profile: Profile) => {
-    setProfiles(prev => [profile, ...prev]);
-    showToast(language === "FR" ? "Profil de développeur ajouté !" : "Developer profile added!", "success");
-  };
-
-  const deleteProfile = (id: string) => {
-    setProfiles(prev => prev.filter(p => p.id !== id));
-    showToast(language === "FR" ? "Profil supprimé de la base !" : "Profile deleted from database!", "info");
-  };
-
-  const toggleAdminStatus = (id: string, isNowAdmin: boolean) => {
-    setProfiles(prev => prev.map(p => p.id === id ? { ...p, isAdmin: isNowAdmin } : p));
-    if (currentUser && currentUser.id === id) {
-      const updatedUser = { ...currentUser, isAdmin: isNowAdmin };
-      setCurrentUser(updatedUser);
-      localStorage.setItem("dc_current_user", JSON.stringify(updatedUser));
+    const attending = evt.attendees.includes(currentUser.id);
+    let newAttendees = [];
+    if (attending) {
+      newAttendees = evt.attendees.filter(uid => uid !== currentUser.id);
+      showToast(language === "FR" ? "Votre participation a été annulée." : "Your participation was canceled.", "info");
+    } else {
+      newAttendees = [...evt.attendees, currentUser.id];
+      showToast(language === "FR" ? "Vous êtes inscrit à cet événement !" : "You are registered for this event!", "success");
     }
-    showToast(
-      language === "FR"
-        ? `Rôle mis à jour avec succès !`
-        : `Role updated successfully!`,
-      "success"
-    );
+
+    try {
+      await updateDoc(doc(db, "events", id), {
+        attendees: newAttendees
+      });
+    } catch (err) {
+      console.error("Error updating event attendees in Firestore:", err);
+      handleFirestoreError(err, OperationType.UPDATE, `events/${id}`);
+    }
+  };
+
+  const deleteEvent = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, "events", id));
+      showToast(language === "FR" ? "Événement supprimé !" : "Event deleted!", "info");
+    } catch (err) {
+      console.error("Error deleting event from Firestore:", err);
+      handleFirestoreError(err, OperationType.DELETE, `events/${id}`);
+    }
+  };
+
+  const addProfile = async (profile: Profile) => {
+    try {
+      await setDoc(doc(db, "profiles", profile.id), {
+        ...profile,
+        password: profile.isAdmin ? "DevConnectAdmin2026" : "devconnect123"
+      });
+      showToast(language === "FR" ? "Profil de développeur ajouté !" : "Developer profile added!", "success");
+    } catch (err) {
+      console.error("Error adding profile to Firestore:", err);
+      handleFirestoreError(err, OperationType.CREATE, `profiles/${profile.id}`);
+    }
+  };
+
+  const deleteProfile = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, "profiles", id));
+      showToast(language === "FR" ? "Profil supprimé de la base !" : "Profile deleted from database!", "info");
+    } catch (err) {
+      console.error("Error deleting profile from Firestore:", err);
+      handleFirestoreError(err, OperationType.DELETE, `profiles/${id}`);
+    }
+  };
+
+  const toggleAdminStatus = async (id: string, isNowAdmin: boolean) => {
+    try {
+      await updateDoc(doc(db, "profiles", id), {
+        isAdmin: isNowAdmin,
+        password: isNowAdmin ? "DevConnectAdmin2026" : "devconnect123"
+      });
+      if (currentUser && currentUser.id === id) {
+        const updatedUser = { ...currentUser, isAdmin: isNowAdmin };
+        setCurrentUser(updatedUser);
+        localStorage.setItem("dc_current_user", JSON.stringify(updatedUser));
+      }
+      showToast(
+        language === "FR"
+          ? `Rôle mis à jour avec succès !`
+          : `Role updated successfully!`,
+        "success"
+      );
+    } catch (err) {
+      console.error("Error updating admin role in Firestore:", err);
+      handleFirestoreError(err, OperationType.UPDATE, `profiles/${id}`);
+    }
   };
 
   const triggerConfetti = () => {
