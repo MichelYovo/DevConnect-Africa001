@@ -24,7 +24,7 @@ interface AppContextProps {
   
   // Auth
   login: (email: string, password?: string) => { success: boolean; error?: string };
-  registerUser: (name: string, email: string, password?: string) => { success: boolean; error?: string };
+  registerUser: (name: string, email: string, password?: string, location?: string) => { success: boolean; error?: string };
   loginWithGoogleProfile: (profile: Profile) => void;
   logout: () => void;
   
@@ -40,6 +40,12 @@ interface AppContextProps {
   // Events
   createEvent: (event: Omit<Event, "id" | "organizerId" | "organizer" | "attendees">) => void;
   toggleAttendEvent: (id: string) => void;
+  deleteEvent: (id: string) => void;
+  
+  // Profiles Management
+  addProfile: (profile: Profile) => void;
+  deleteProfile: (id: string) => void;
+  toggleAdminStatus: (id: string, isNowAdmin: boolean) => void;
   
   // Simulator triggers
   triggerConfetti: () => void;
@@ -126,22 +132,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const applyTheme = (t: Theme) => {
     const root = document.documentElement;
-    if (t === "dark") {
+    if (t === "dark" || t === "system") {
       root.classList.add("dark");
       root.style.colorScheme = "dark";
     } else if (t === "light") {
       root.classList.remove("dark");
       root.style.colorScheme = "light";
-    } else {
-      // System
-      const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      if (isDark) {
-        root.classList.add("dark");
-        root.style.colorScheme = "dark";
-      } else {
-        root.classList.remove("dark");
-        root.style.colorScheme = "light";
-      }
     }
   };
 
@@ -195,11 +191,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const newSimulatedProfile: Profile = {
       id: `user-${Date.now()}`,
       name: formattedName,
-      avatar: `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80`,
+      avatar: "",
       title: email.toLowerCase() === "michelame.yovo@gmail.com" ? "Administrateur Chef de Projet" : "Full Stack Engineer",
-      bio: email.toLowerCase() === "michelame.yovo@gmail.com" ? "Administrateur principal du hub de l'écosystème tech togolais." : "Nouveau membre de la communauté tech togolaise !",
-      skills: email.toLowerCase() === "michelame.yovo@gmail.com" ? ["Gouvernance", "Supabase", "React", "Togo Tech Management"] : ["React", "JavaScript", "Tailwind CSS"],
-      location: "Lomé",
+      bio: email.toLowerCase() === "michelame.yovo@gmail.com" ? "Administrateur principal du hub de l'écosystème tech africain." : "Nouveau membre de la communauté tech africaine !",
+      skills: email.toLowerCase() === "michelame.yovo@gmail.com" ? ["Gouvernance", "Supabase", "React", "Africa Tech Management"] : ["React", "JavaScript", "Tailwind CSS"],
+      location: "Dakar, Sénégal",
       github: "https://github.com",
       linkedin: "https://linkedin.com",
       email: email,
@@ -213,7 +209,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return { success: true };
   };
 
-  const registerUser = (name: string, email: string, password?: string) => {
+  const registerUser = (name: string, email: string, password?: string, location?: string) => {
     if (!name || !email) {
       return { success: false, error: "Please provide both name and email" };
     }
@@ -223,14 +219,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return { success: false, error: "Email already exists" };
     }
 
+    const defaultLoc = location || "Dakar, Sénégal";
+
     const newUser: Profile = {
       id: `user-${Date.now()}`,
       name,
-      avatar: `https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80`,
+      avatar: "",
       title: email.toLowerCase() === "michelame.yovo@gmail.com" ? "Administrateur Chef de Projet" : "Junior Web Developer",
-      bio: email.toLowerCase() === "michelame.yovo@gmail.com" ? "Administrateur principal du hub de l'écosystème tech togolais." : "Développeur passionné basé au Togo, désireux d'élargir mes compétences et de collaborer sur de superbes projets.",
+      bio: email.toLowerCase() === "michelame.yovo@gmail.com" ? "Administrateur principal du hub de l'écosystème tech africain." : `Développeur passionné basé à ${defaultLoc}, désireux d'élargir mes compétences et de collaborer sur de superbes projets à travers l'Afrique.`,
       skills: email.toLowerCase() === "michelame.yovo@gmail.com" ? ["Gouvernance", "Supabase", "React"] : ["HTML", "CSS", "JavaScript"],
-      location: "Lomé",
+      location: defaultLoc,
       github: "",
       linkedin: "",
       email,
@@ -239,7 +237,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     setProfiles(prev => [newUser, ...prev]);
     setCurrentUser(newUser);
-    showToast(language === "FR" ? `Compte créé avec succès ! Bienvenue à Lomé !` : `Account created successfully! Welcome to Lomé!`, "success");
+    showToast(language === "FR" ? `Compte créé avec succès ! Bienvenue sur DevConnect Africa !` : `Account created successfully! Welcome to DevConnect Africa!`, "success");
     setView("dashboard");
     return { success: true };
   };
@@ -388,6 +386,36 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }));
   };
 
+  const deleteEvent = (id: string) => {
+    setEvents(prev => prev.filter(e => e.id !== id));
+    showToast(language === "FR" ? "Événement supprimé !" : "Event deleted!", "info");
+  };
+
+  const addProfile = (profile: Profile) => {
+    setProfiles(prev => [profile, ...prev]);
+    showToast(language === "FR" ? "Profil de développeur ajouté !" : "Developer profile added!", "success");
+  };
+
+  const deleteProfile = (id: string) => {
+    setProfiles(prev => prev.filter(p => p.id !== id));
+    showToast(language === "FR" ? "Profil supprimé de la base !" : "Profile deleted from database!", "info");
+  };
+
+  const toggleAdminStatus = (id: string, isNowAdmin: boolean) => {
+    setProfiles(prev => prev.map(p => p.id === id ? { ...p, isAdmin: isNowAdmin } : p));
+    if (currentUser && currentUser.id === id) {
+      const updatedUser = { ...currentUser, isAdmin: isNowAdmin };
+      setCurrentUser(updatedUser);
+      localStorage.setItem("dc_current_user", JSON.stringify(updatedUser));
+    }
+    showToast(
+      language === "FR"
+        ? `Rôle mis à jour avec succès !`
+        : `Role updated successfully!`,
+      "success"
+    );
+  };
+
   const triggerConfetti = () => {
     showToast(language === "FR" ? "🎉 Succès communautaire !" : "🎉 Community Success!", "success");
   };
@@ -422,6 +450,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         toggleLikeProject,
         createEvent,
         toggleAttendEvent,
+        deleteEvent,
+        addProfile,
+        deleteProfile,
+        toggleAdminStatus,
         triggerConfetti,
         toastMessage,
         showToast,

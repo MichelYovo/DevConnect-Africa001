@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useApp } from "../context/AppContext";
 import { getTranslation } from "../i18n";
-import { TOGO_CITIES } from "../data";
+import DeveloperAvatar from "./DeveloperAvatar";
 import { 
   User, 
   MapPin, 
@@ -10,15 +10,18 @@ import {
   Mail, 
   FileText, 
   Award, 
-  Image, 
+  Image as ImageIcon, 
   Save, 
   CheckCircle2, 
   X,
-  Plus
+  Plus,
+  Upload,
+  Trash2
 } from "lucide-react";
 
 export default function ProfileView() {
-  const { currentUser, updateProfile, language } = useApp();
+  const { currentUser, updateProfile, language, showToast } = useApp();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!currentUser) {
     return (
@@ -73,16 +76,41 @@ export default function ProfileView() {
     });
   };
 
-  // Quick preset avatars
-  const avatarPresets = [
-    "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150",
-    "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150",
-    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
-    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
-    "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150",
-    "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150",
-    "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150"
-  ];
+  // Convert uploaded image file directly to persistent base64 representation
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 1024 * 1024 * 2) {
+      showToast(
+        language === "FR" ? "La taille de l'image ne doit pas dépasser 2 Mo." : "Image size must not exceed 2MB.",
+        "error"
+      );
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setAvatar(reader.result as string);
+      showToast(
+        language === "FR" ? "Image importée avec succès ! Sauvegardez pour valider." : "Image imported successfully! Save to confirm.",
+        "success"
+      );
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const triggerFileSelect = () => {
+    fileInputRef.current?.click();
+  };
+
+  const clearAvatar = () => {
+    setAvatar("");
+    showToast(
+      language === "FR" ? "Avatar réinitialisé en initiales de développeur." : "Avatar reset to developer initials.",
+      "info"
+    );
+  };
 
   return (
     <div className="max-w-3xl mx-auto space-y-8 pb-16">
@@ -101,20 +129,19 @@ export default function ProfileView() {
         {/* Left column preview and Avatar selections */}
         <div className="md:col-span-1 space-y-6">
           
-          <div className="bg-white dark:bg-[#09090b]/40 border border-zinc-200/60 dark:border-white/10 rounded-2xl p-6 text-center space-y-4 shadow-sm">
+          <div className="bg-white dark:bg-[#09090b]/40 border border-zinc-200/60 dark:border-white/10 rounded-2xl p-6 text-center space-y-4 shadow-sm relative overflow-hidden">
             <div className="relative inline-block mx-auto">
-              <img
-                src={avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150"}
-                alt={name}
-                className="h-28 w-28 rounded-2xl object-cover ring-4 ring-green-500/10 mx-auto"
-                referrerPolicy="no-referrer"
+              <DeveloperAvatar
+                name={name}
+                avatar={avatar}
+                sizeClassName="h-28 w-28 text-3xl"
               />
               <span className="absolute bottom-1 right-1 h-3.5 w-3.5 rounded-full bg-emerald-500 border-2 border-white dark:border-zinc-950"></span>
             </div>
             
             <div className="space-y-1">
               <h3 className="font-extrabold text-zinc-900 dark:text-white">{name || "Nom complet"}</h3>
-              <p className="text-xs text-green-600 dark:text-green-400 font-bold">{title || "Poste"}</p>
+              <p className="text-xs text-green-600 dark:text-green-400 font-bold leading-tight">{title || "Poste"}</p>
               <p className="text-[11px] text-zinc-400 flex items-center justify-center gap-1 font-medium">
                 <MapPin className="h-3.5 w-3.5 text-yellow-500" />
                 {location}, Togo 🇹🇬
@@ -122,29 +149,40 @@ export default function ProfileView() {
             </div>
           </div>
 
-          {/* Quick preset selection */}
-          <div className="bg-white dark:bg-[#09090b]/40 border border-zinc-200/60 dark:border-white/10 rounded-2xl p-5 space-y-3 shadow-sm">
+          {/* New Interactive Custom Image Upload Selector */}
+          <div className="bg-white dark:bg-[#09090b]/40 border border-zinc-200/60 dark:border-white/10 rounded-2xl p-5 space-y-4 shadow-sm">
             <span className="text-xs font-mono font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest block">
-              Presets d'Avatar
+              Photo de Profil
             </span>
-            <div className="grid grid-cols-4 gap-2">
-              {avatarPresets.map((preset, idx) => (
+            
+            <div className="space-y-2">
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleFileChange} 
+                accept="image/*" 
+                className="hidden" 
+              />
+              
+              <button
+                type="button"
+                onClick={triggerFileSelect}
+                className="w-full py-3 px-4 rounded-xl border border-dashed border-zinc-200/80 dark:border-white/10 hover:border-green-500/50 dark:hover:border-green-500/50 hover:bg-zinc-50 dark:hover:bg-zinc-900/40 text-xs font-bold text-zinc-700 dark:text-zinc-300 flex flex-col items-center gap-2 transition-all cursor-pointer"
+              >
+                <Upload className="h-5 w-5 text-zinc-400 dark:text-zinc-500" />
+                <span>Importer une image</span>
+              </button>
+
+              {avatar && (
                 <button
-                  key={idx}
                   type="button"
-                  onClick={() => setAvatar(preset)}
-                  className={`relative rounded-lg overflow-hidden border-2 cursor-pointer h-11 w-11 ${
-                    avatar === preset ? "border-green-500 ring-2 ring-green-500/10" : "border-transparent"
-                  }`}
+                  onClick={clearAvatar}
+                  className="w-full py-2 rounded-xl text-[10px] font-black text-rose-500 bg-rose-500/5 hover:bg-rose-500/10 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                 >
-                  <img
-                    src={preset}
-                    alt="Preset"
-                    className="h-full w-full object-cover"
-                    referrerPolicy="no-referrer"
-                  />
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Effacer la photo de profil
                 </button>
-              ))}
+              )}
             </div>
           </div>
 
@@ -198,44 +236,30 @@ export default function ProfileView() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1">
+              <div className="space-y-1 md:col-span-2">
                 <label className="text-xs font-semibold text-zinc-600 dark:text-zinc-400 block">
-                  {getTranslation(language, "city")} *
-                </label>
-                <select
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-zinc-200/60 dark:border-white/10 bg-zinc-50/50 dark:bg-zinc-900/50 text-sm focus:border-green-500 outline-none text-zinc-700 dark:text-zinc-300"
-                >
-                  {TOGO_CITIES.map((city) => (
-                    <option key={city} value={city}>
-                      {city}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-zinc-600 dark:text-zinc-400 block">
-                  {getTranslation(language, "country")}
+                  {language === "FR" ? "Localisation (Ville, Pays) *" : "Location (City, Country) *"}
                 </label>
                 <input
                   type="text"
-                  disabled
-                  value={getTranslation(language, "defaultCountryTogo")}
-                  className="w-full px-4 py-2.5 rounded-xl border border-zinc-200/60 dark:border-white/10 bg-zinc-100 dark:bg-[#09090b]/60 text-sm text-zinc-400 outline-none"
+                  required
+                  placeholder="Ex: Dakar, Sénégal"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-zinc-200/60 dark:border-white/10 bg-zinc-50/50 dark:bg-zinc-900/50 text-sm focus:border-green-500 outline-none text-zinc-900 dark:text-white"
                 />
               </div>
             </div>
 
             <div className="space-y-1">
               <label className="text-xs font-semibold text-zinc-600 dark:text-zinc-400 block">
-                {getTranslation(language, "avatarUrl")}
+                {getTranslation(language, "avatarUrl")} (Ou importez un fichier à gauche)
               </label>
               <input
                 type="url"
                 value={avatar}
                 onChange={(e) => setAvatar(e.target.value)}
+                placeholder="https://..."
                 className="w-full px-4 py-2.5 rounded-xl border border-zinc-200/60 dark:border-white/10 bg-zinc-50/50 dark:bg-zinc-900/50 text-sm focus:border-green-500 outline-none text-zinc-900 dark:text-white"
               />
             </div>

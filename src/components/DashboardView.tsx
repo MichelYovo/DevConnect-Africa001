@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useApp } from "../context/AppContext";
 import { getTranslation, getShortFormattedDate } from "../i18n";
-import { TOGO_CITIES } from "../data";
+import { AFRICAN_COUNTRIES } from "../data";
+import DeveloperAvatar from "./DeveloperAvatar";
 import { 
   Plus, 
   MapPin, 
@@ -40,10 +41,20 @@ export default function DashboardView() {
   // Search profiles state
   const [localSearch, setLocalSearch] = useState(searchSkillQuery);
 
+  const getFirstName = (fullName: string) => {
+    if (!fullName) return "";
+    const parts = fullName.split(/[\s\._,]+/);
+    if (parts.length > 0) {
+      const first = parts[0];
+      return first.charAt(0).toUpperCase() + first.slice(1);
+    }
+    return fullName;
+  };
+
   // Filter developers
   const filteredDevs = profiles.filter((p) => {
-    // City filter
-    if (selectedCityFilter !== "all" && p.location !== selectedCityFilter) {
+    // Country filter
+    if (selectedCityFilter !== "all" && !p.location.toLowerCase().includes(selectedCityFilter.toLowerCase())) {
       return false;
     }
     // Skill/Search query
@@ -78,16 +89,16 @@ export default function DashboardView() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-yellow-500/10 text-yellow-500 text-xs font-mono font-bold">
-              ⚡ LIVE TOGO REGISTRY
+              ⚡ LIVE PAN-AFRICAN REGISTRY
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
               {currentUser 
-                ? `${getTranslation(language, "welcomeUser")} ${currentUser.name} !`
-                : "Communauté Tech Togolaise"
+                ? `${getTranslation(language, "welcomeUser")} ${getFirstName(currentUser.name)} !`
+                : "Communauté Tech Africaine"
               }
             </h1>
             <p className="text-zinc-600 dark:text-zinc-300 text-xs sm:text-sm max-w-xl leading-relaxed">
-              Découvrez les compétences des profils togolais, initiez des partenariats et participez aux prochains meetups de Lomé.
+              Découvrez les compétences des profils de développeurs à travers l'Afrique entière, initiez des partenariats et participez aux événements d'envergure.
             </p>
           </div>
           
@@ -133,12 +144,12 @@ export default function DashboardView() {
               Filtres Communauté
             </h3>
 
-            {/* Togo priority switch (read-only style, always-on as requested) */}
+            {/* Pan-African Network switch */}
             <div className="flex items-center justify-between p-2.5 rounded-xl bg-zinc-50 dark:bg-[#09090b]/60 border border-zinc-150 dark:border-white/5">
               <div className="flex items-center gap-2">
                 <span className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse"></span>
                 <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                  Priorité Togo 🇹🇬
+                  Réseau Afrique 🌍
                 </span>
               </div>
               <span className="text-[10px] bg-green-500/10 text-green-700 dark:text-green-400 px-1.5 py-0.5 rounded font-mono font-bold">
@@ -146,7 +157,7 @@ export default function DashboardView() {
               </span>
             </div>
 
-            {/* City Filters */}
+            {/* Country Filters */}
             <div className="space-y-2">
               <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 block">
                 {getTranslation(language, "filterByCity")}
@@ -163,21 +174,21 @@ export default function DashboardView() {
                   <span>Tous</span>
                   <span className="text-[10px] font-mono text-zinc-400">({profiles.length})</span>
                 </button>
-                {TOGO_CITIES.map((city) => {
-                  const count = profiles.filter(p => p.location === city).length;
+                {AFRICAN_COUNTRIES.map((ctry) => {
+                  const count = profiles.filter(p => p.location.toLowerCase().includes(ctry.toLowerCase())).length;
                   return (
                     <button
-                      key={city}
-                      onClick={() => setCityFilter(city)}
+                      key={ctry}
+                      onClick={() => setCityFilter(ctry)}
                       className={`text-left px-3 py-2 rounded-xl text-xs font-semibold transition-all flex justify-between items-center ${
-                        selectedCityFilter === city
+                        selectedCityFilter === ctry
                           ? "bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20"
                           : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-[#09090b]/30"
                       }`}
                     >
                       <span className="flex items-center gap-1">
                         <MapPin className="h-3 w-3 text-yellow-500" />
-                        {city}
+                        {ctry}
                       </span>
                       <span className="text-[10px] font-mono text-zinc-400">({count})</span>
                     </button>
@@ -191,18 +202,17 @@ export default function DashboardView() {
           {currentUser && (
             <div className="bg-white dark:bg-[#09090b]/40 border border-zinc-200/60 dark:border-white/10 rounded-2xl p-5 space-y-4 shadow-sm">
               <div className="flex items-center gap-2">
-                <img
-                  src={currentUser.avatar}
-                  alt={currentUser.name}
-                  className="h-8 w-8 rounded-full object-cover ring-2 ring-green-500/20"
-                  referrerPolicy="no-referrer"
+                <DeveloperAvatar
+                  name={currentUser.name}
+                  avatar={currentUser.avatar}
+                  sizeClassName="h-8 w-8 text-[10px]"
                 />
                 <div>
                   <h4 className="text-xs font-bold text-zinc-900 dark:text-white truncate max-w-[120px]">
-                    {currentUser.name}
+                    {getFirstName(currentUser.name)}
                   </h4>
                   <p className="text-[10px] text-zinc-400">
-                    {currentUser.location}, Togo
+                    {currentUser.location}
                   </p>
                 </div>
               </div>
@@ -267,7 +277,7 @@ export default function DashboardView() {
           {/* Results count info */}
           <div className="flex items-center justify-between text-xs text-zinc-500">
             <span>
-              Affichage de <strong>{filteredDevs.length}</strong> profil(s) correspondants au Togo.
+              Affichage de <strong>{filteredDevs.length}</strong> profil(s) correspondants.
             </span>
             {selectedCityFilter !== "all" && (
               <span>
@@ -281,7 +291,7 @@ export default function DashboardView() {
             <div className="text-center py-12 bg-white dark:bg-[#09090b]/40 border border-zinc-200/60 dark:border-white/10 rounded-2xl space-y-3 shadow-sm">
               <User className="h-10 w-10 text-zinc-400 mx-auto" />
               <p className="text-sm text-zinc-500">
-                Aucun développeur ne correspond à cette recherche au Togo.
+                Aucun développeur ne correspond à cette recherche.
               </p>
               <button
                 onClick={() => { setLocalSearch(""); setSkillQuery(""); setCityFilter("all"); }}
@@ -291,7 +301,7 @@ export default function DashboardView() {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredDevs.map((dev) => (
                 <div
                   key={dev.id}
@@ -301,11 +311,10 @@ export default function DashboardView() {
                     
                     {/* Header */}
                     <div className="flex gap-4">
-                      <img
-                        src={dev.avatar}
-                        alt={dev.name}
-                        className="h-12 w-12 rounded-xl object-cover ring-1 ring-zinc-100 dark:ring-zinc-800"
-                        referrerPolicy="no-referrer"
+                      <DeveloperAvatar
+                        name={dev.name}
+                        avatar={dev.avatar}
+                        sizeClassName="h-12 w-12 text-sm"
                       />
                       <div>
                         <h4 className="text-sm font-bold text-zinc-900 dark:text-white">

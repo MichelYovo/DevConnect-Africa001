@@ -28,7 +28,7 @@ function MainAppContent() {
   const renderView = () => {
     switch (currentView) {
       case "landing":
-        return <LandingView />;
+        return currentUser ? <DashboardView /> : <LandingView />;
       case "login":
       case "register":
         return <AuthView />;
@@ -47,12 +47,12 @@ function MainAppContent() {
       case "supabase-sql":
         return <SupabaseSqlView />;
       default:
-        return <LandingView />;
+        return currentUser ? <DashboardView /> : <LandingView />;
     }
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-[#030303] text-zinc-900 dark:text-zinc-100 font-sans transition-all flex flex-col justify-between selection:bg-green-500 selection:text-black relative">
+    <div className="min-h-screen bg-zinc-50 dark:bg-black text-zinc-900 dark:text-zinc-100 font-sans transition-all flex flex-col justify-between selection:bg-green-500 selection:text-black relative">
       
       {/* Kora/Gravity premium animated ambient background glows */}
       <BackgroundGlow />
@@ -60,82 +60,6 @@ function MainAppContent() {
       <div className="space-y-6">
         {/* Navigation Header */}
         <Header />
-
-        {/* Dynamic sub-header navigation path bar (Vercel style) */}
-        {currentUser && (
-          <div className="border-b border-zinc-200/60 dark:border-white/5 bg-white/60 dark:bg-[#09090b]/40 backdrop-blur-md -mt-6">
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-              <div className="flex h-12 items-center justify-between text-xs font-semibold">
-                <div className="flex items-center gap-2 overflow-x-auto py-2">
-                  <button 
-                    onClick={() => setView("dashboard")}
-                    className={`px-3 py-1.5 rounded-lg transition-colors ${
-                      currentView === "dashboard" 
-                        ? "bg-green-500/10 text-green-600 dark:text-green-400 font-extrabold border border-green-500/10" 
-                        : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white"
-                    }`}
-                  >
-                    Tableau de bord
-                  </button>
-                  <span className="text-zinc-300 dark:text-zinc-800">/</span>
-                  <button 
-                    onClick={() => setView("profile")}
-                    className={`px-3 py-1.5 rounded-lg transition-colors ${
-                      currentView === "profile" 
-                        ? "bg-green-500/10 text-green-600 dark:text-green-400 font-extrabold border border-green-500/10" 
-                        : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white"
-                    }`}
-                  >
-                    Gérer Profil
-                  </button>
-                  <span className="text-zinc-300 dark:text-zinc-800">/</span>
-                  <button 
-                    onClick={() => setView("projects")}
-                    className={`px-3 py-1.5 rounded-lg transition-colors ${
-                      currentView === "projects" 
-                        ? "bg-green-500/10 text-green-600 dark:text-green-400 font-extrabold border border-green-500/10" 
-                        : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white"
-                    }`}
-                  >
-                    Mes Projets
-                  </button>
-                  <span className="text-zinc-300 dark:text-zinc-800">/</span>
-                  <button 
-                    onClick={() => setView("settings")}
-                    className={`px-3 py-1.5 rounded-lg transition-colors ${
-                      currentView === "settings" 
-                        ? "bg-green-500/10 text-green-600 dark:text-green-400 font-extrabold border border-green-500/10" 
-                        : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white"
-                    }`}
-                  >
-                    Paramètres
-                  </button>
-
-                  {currentUser && (currentUser.email === "michelame.yovo@gmail.com" || currentUser.isAdmin) && (
-                    <>
-                      <span className="text-zinc-300 dark:text-zinc-800">/</span>
-                      <button 
-                        onClick={() => setView("admin")}
-                        className={`px-3 py-1.5 rounded-lg transition-colors ${
-                          currentView === "admin" 
-                            ? "bg-green-500/10 text-green-600 dark:text-green-400 font-extrabold border border-green-500/10" 
-                            : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white"
-                        }`}
-                      >
-                        Console Admin
-                      </button>
-                    </>
-                  )}
-                </div>
-
-                <div className="hidden sm:flex items-center gap-1.5 text-[10px] font-mono text-zinc-400">
-                  <MapPin className="h-3 w-3 text-yellow-500 animate-pulse" />
-                  <span>Session Togo active</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Primary Page Canvas Content */}
         <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-4">
@@ -152,15 +76,21 @@ function MainAppContent() {
             {/* Left Brand Identity */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-green-500 text-black font-extrabold text-[11px]">
-                  D
+                <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-[#0a0a0a] border border-green-500/30 text-green-500 shadow-md">
+                  <svg className="h-3.5 w-3.5 stroke-green-500 stroke-[2] fill-none" viewBox="0 0 24 24">
+                    <circle cx="12" cy="5" r="2" fill="currentColor" />
+                    <circle cx="5" cy="12" r="2" fill="currentColor" />
+                    <circle cx="19" cy="12" r="2" fill="currentColor" />
+                    <circle cx="12" cy="19" r="2" fill="currentColor" />
+                    <path d="M12 7v10M7 12h10" />
+                  </svg>
                 </div>
                 <span className="font-bold tracking-tight text-zinc-900 dark:text-white">
-                  DevConnect Togo
+                  DevConnect Africa
                 </span>
               </div>
               <p className="text-[11px] leading-relaxed max-w-xs">
-                Une plateforme de référence visant à cartographier et connecter les meilleurs talents technologiques au Togo (Lomé, Kara, Kpalimé).
+                Une plateforme panafricaine de référence visant à cartographier et connecter les meilleurs talents technologiques en Afrique (Dakar, Lagos, Nairobi, Kigali, Lomé).
               </p>
             </div>
 
@@ -168,24 +98,28 @@ function MainAppContent() {
             <div className="flex flex-wrap gap-4 font-mono text-[10px]">
               <div className="flex items-center gap-1">
                 <span className="h-1.5 w-1.5 rounded-full bg-green-500"></span>
-                <span>Lomé Capitale</span>
+                <span>Dakar Hub</span>
               </div>
               <div className="flex items-center gap-1">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-                <span>Kara Campus</span>
+                <span>Nairobi Node</span>
               </div>
               <div className="flex items-center gap-1">
                 <span className="h-1.5 w-1.5 rounded-full bg-yellow-500"></span>
-                <span>Kpalimé Hub</span>
+                <span>Lomé Tech</span>
               </div>
               <div className="flex items-center gap-1">
                 <span className="h-1.5 w-1.5 rounded-full bg-teal-500"></span>
-                <span>Sokodé Code</span>
+                <span>Lagos Core</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
+                <span>Kigali Valley</span>
               </div>
             </div>
 
             {/* CTA action schema (Admin only) */}
-            {currentUser && (currentUser.email === "michelame.yovo@gmail.com" || currentUser.isAdmin) && (
+            {currentUser && currentUser.email === "michelame.yovo@gmail.com" && (
               <div className="flex gap-4 font-semibold">
                 <button 
                   onClick={() => setView("admin")}
@@ -207,7 +141,7 @@ function MainAppContent() {
               &copy; {new Date().getFullYear()} DevConnect Africa. Tous droits réservés.
             </span>
             <div className="flex gap-3">
-              <span>Made with 🇹🇬 Excellence</span>
+              <span>Made with 🌍 Excellence</span>
               <span>•</span>
               <a 
                 href="https://supabase.com" 

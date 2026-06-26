@@ -1,6 +1,6 @@
 {
   "name": "DevConnect Africa",
-  "description": "Plateforme communautaire de référence pour les développeurs au Togo et en Afrique.",
+  "description": "Plateforme communautaire de référence pour les développeurs en Afrique.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

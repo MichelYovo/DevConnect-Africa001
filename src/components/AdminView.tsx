@@ -1,126 +1,148 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useApp } from "../context/AppContext";
 import { getTranslation } from "../i18n";
-import { Profile } from "../types";
+import { Profile, Project, Event } from "../types";
+import DeveloperAvatar from "./DeveloperAvatar";
 import { 
   Users, 
-  Database, 
   Trash2, 
-  Activity, 
   MapPin, 
   Shield, 
-  UserX, 
-  CheckCircle2, 
   Search, 
-  Settings, 
-  RefreshCw, 
-  TrendingUp, 
-  Flame,
-  Globe
+  Plus, 
+  Layers,
+  Calendar,
+  Briefcase,
+  UserPlus,
+  Mail,
+  UserCheck
 } from "lucide-react";
-import SupabaseSqlView from "./SupabaseSqlView";
-
-// Simulated real-time actions of developers on the platform
-const LIVE_ACTIONS = [
-  "consulte l'AgroMarket Togo",
-  "met à jour ses compétences React",
-  "crée un nouveau projet de suivi de transport",
-  "s'inscrit au Lomé Javascript Meetup",
-  "regarde les profils de Kpalimé",
-  "met à jour son dépôt GitHub",
-  "analyse l'utilisation du Machine Learning",
-  "programme un atelier Figma",
-  "explore le tableau de bord",
-  "teste la connexion Google API"
-];
-
-interface ConnectedSession {
-  id: string;
-  name: string;
-  avatar: string;
-  location: string;
-  action: string;
-  time: string;
-  ip: string;
-}
+import { AFRICAN_COUNTRIES } from "../data";
 
 export default function AdminView() {
-  const { profiles, projects, events, language, showToast } = useApp();
-  const [activeTab, setActiveTab] = useState<"sessions" | "users" | "sql">("sessions");
+  const { 
+    profiles, 
+    projects, 
+    events, 
+    language, 
+    deleteProject, 
+    deleteEvent, 
+    addProfile, 
+    deleteProfile, 
+    toggleAdminStatus, 
+    currentUser,
+    showToast 
+  } = useApp();
+
+  const [activeTab, setActiveTab] = useState<"users" | "publications">("users");
   const [searchQuery, setSearchQuery] = useState("");
-  const [userList, setUserList] = useState<Profile[]>(profiles);
-  const [connectedSessions, setConnectedSessions] = useState<ConnectedSession[]>([]);
-  const [refreshing, setRefreshing] = useState(false);
+  
+  // "Add Developer" Form Local States
+  const [newUserName, setNewUserName] = useState("");
+  const [newUserEmail, setNewUserEmail] = useState("");
+  const [newUserTitle, setNewUserTitle] = useState("");
+  const [newUserLocation, setNewUserLocation] = useState("Dakar, Sénégal");
+  const [newUserBio, setNewUserBio] = useState("");
+  const [newUserSkills, setNewUserSkills] = useState("");
 
-  // Load and shuffle live simulated sessions
-  useEffect(() => {
-    generateLiveSessions();
-    
-    // Simulate real-time dynamic active user changes
-    const interval = setInterval(() => {
-      setConnectedSessions(prev => {
-        return prev.map(s => {
-          if (Math.random() > 0.6) {
-            const randomAction = LIVE_ACTIONS[Math.floor(Math.random() * LIVE_ACTIONS.length)];
-            return {
-              ...s,
-              action: randomAction,
-              time: "À l'instant"
-            };
-          }
-          return s;
-        });
-      });
-    }, 8000);
+  const handleCreateUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newUserName.trim() || !newUserEmail.trim() || !newUserTitle.trim()) {
+      showToast(
+        language === "FR" ? "Veuillez remplir les champs obligatoires." : "Please fill in the required fields.",
+        "error"
+      );
+      return;
+    }
 
-    return () => clearInterval(interval);
-  }, [profiles]);
+    // Verify duplicate email
+    if (profiles.some(p => p.email.toLowerCase() === newUserEmail.trim().toLowerCase())) {
+      showToast(
+        language === "FR" ? "Cet email est déjà enregistré." : "This email is already registered.",
+        "error"
+      );
+      return;
+    }
 
-  const generateLiveSessions = () => {
-    setRefreshing(true);
-    // Select some profiles from database to show as online
-    const onlineProfiles = profiles.filter((_, idx) => idx % 2 === 0 || idx === 0);
-    const sessions = onlineProfiles.map((p, index) => {
-      const locations = ["Lomé", "Kara", "Kpalimé", "Atakpamé", "Sokodé"];
-      const matchedCity = p.location || locations[index % locations.length];
-      const randomAction = LIVE_ACTIONS[index % LIVE_ACTIONS.length];
-      return {
-        id: `sess-${p.id}`,
-        name: p.name,
-        avatar: p.avatar,
-        location: matchedCity,
-        action: randomAction,
-        time: `${Math.floor(Math.random() * 10) + 1}m`,
-        ip: `197.243.${Math.floor(Math.random() * 254) + 1}.${Math.floor(Math.random() * 254) + 1}`
-      };
-    });
-    setConnectedSessions(sessions);
-    setTimeout(() => setRefreshing(false), 500);
+    const skillsArray = newUserSkills
+      .split(",")
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+
+    const newProfile: Profile = {
+      id: `user-${Date.now()}`,
+      name: newUserName.trim(),
+      avatar: "", // defaults to custom typographic initials
+      title: newUserTitle.trim(),
+      bio: newUserBio.trim() || "Développeur de la communauté DevConnect Africa.",
+      skills: skillsArray.length > 0 ? skillsArray : ["React", "JavaScript"],
+      location: newUserLocation,
+      github: "https://github.com",
+      linkedin: "https://linkedin.com",
+      email: newUserEmail.trim().toLowerCase(),
+      isAdmin: false
+    };
+
+    addProfile(newProfile);
+
+    // Reset fields
+    setNewUserName("");
+    setNewUserEmail("");
+    setNewUserTitle("");
+    setNewUserBio("");
+    setNewUserSkills("");
   };
 
-  // Keep internal list in sync with AppContext profiles
-  useEffect(() => {
-    setUserList(profiles);
-  }, [profiles]);
+  const handleDeleteUserClick = (id: string, name: string) => {
+    if (currentUser && currentUser.id === id) {
+      showToast(
+        language === "FR" ? "Vous ne pouvez pas supprimer votre propre compte admin !" : "You cannot delete your own admin account!",
+        "error"
+      );
+      return;
+    }
 
-  const handleDeleteUser = (id: string, name: string) => {
-    if (confirm(`Êtes-vous sûr de vouloir supprimer le profil de ${name} ?`)) {
-      setUserList(prev => prev.filter(u => u.id !== id));
-      showToast(language === "FR" ? `Profil de ${name} supprimé.` : `Profile of ${name} deleted.`, "info");
+    const confirmText = language === "FR" 
+      ? `Êtes-vous sûr de vouloir supprimer définitivement le développeur ${name} ?`
+      : `Are you sure you want to permanently delete developer ${name}?`;
+
+    if (window.confirm(confirmText)) {
+      deleteProfile(id);
     }
   };
 
-  const handleToggleAdminStatus = (id: string, name: string, isNowAdmin: boolean) => {
-    setUserList(prev => prev.map(u => u.id === id ? { ...u, isAdmin: isNowAdmin } : u));
-    showToast(
-      language === "FR" 
-        ? `${name} est maintenant ${isNowAdmin ? "Administrateur" : "Utilisateur standard"}.` 
-        : `${name} is now ${isNowAdmin ? "Administrator" : "Standard User"}.`, 
-      "success"
-    );
+  const handleToggleAdminClick = (id: string, name: string, currentStatus: boolean) => {
+    const confirmText = language === "FR"
+      ? `Voulez-vous modifier le rôle de ${name} ?`
+      : `Do you want to change the role of ${name}?`;
+
+    if (window.confirm(confirmText)) {
+      toggleAdminStatus(id, !currentStatus);
+    }
   };
 
-  const filteredUsers = userList.filter(u => 
+  const handleDeleteProjectClick = (id: string, title: string) => {
+    const confirmText = language === "FR"
+      ? `Voulez-vous supprimer définitivement la publication du projet "${title}" ?`
+      : `Do you want to permanently delete the project publication "${title}"?`;
+
+    if (window.confirm(confirmText)) {
+      deleteProject(id);
+    }
+  };
+
+  const handleDeleteEventClick = (id: string, title: string) => {
+    const confirmText = language === "FR"
+      ? `Voulez-vous supprimer définitivement l'événement "${title}" ?`
+      : `Do you want to permanently delete the event "${title}"?`;
+
+    if (window.confirm(confirmText)) {
+      deleteEvent(id);
+    }
+  };
+
+  // Filter users based on search query
+  const filteredProfiles = profiles.filter(u => 
     u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
     u.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -128,293 +150,393 @@ export default function AdminView() {
   );
 
   return (
-    <div className="space-y-8 pb-16">
+    <div className="max-w-6xl mx-auto space-y-6 pb-16 px-2 sm:px-4 text-[11px]">
       
-      {/* Title block */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-green-500/10 text-green-600 dark:text-green-400 text-xs font-mono font-bold border border-green-500/10">
-            <Shield className="h-3.5 w-3.5" />
-            CONSOLE DE CONTRÔLE ADMIN
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-950 dark:text-white mt-2">
-            Panneau de Gestion
-          </h1>
-          <p className="text-zinc-500 text-sm">
-            Supervisez les développeurs connectés au Togo, gérez les profils et accédez aux requêtes SQL Supabase.
-          </p>
+      {/* Centered Minimal Header */}
+      <div className="text-center space-y-2">
+        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 text-[9px] font-bold tracking-widest uppercase border border-green-500/20">
+          <Shield className="h-2.5 w-2.5 animate-pulse" />
+          Espace d'Administration Sécurisé
         </div>
+        <h1 className="text-xl font-display font-black tracking-tight text-zinc-950 dark:text-white">
+          Gestion du Hub DevConnect
+        </h1>
+        <p className="max-w-xl mx-auto text-zinc-500 dark:text-zinc-400 text-[10px]">
+          Ajoutez de nouveaux membres, attribuez des rôles d'administration et supervisez les publications de projets ou d'événements technologiques au Togo.
+        </p>
 
         {/* Tab triggers */}
-        <div className="flex bg-zinc-100 dark:bg-[#09090b] p-1 rounded-xl border dark:border-white/5 self-stretch sm:self-auto">
+        <div className="inline-flex bg-zinc-100 dark:bg-zinc-900/60 p-0.5 rounded-full border border-zinc-200/50 dark:border-white/5 mt-2">
           <button
-            onClick={() => setActiveTab("sessions")}
-            className={`flex-1 sm:flex-initial px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
-              activeTab === "sessions"
-                ? "bg-white dark:bg-zinc-900 text-green-500 shadow-sm border border-zinc-200/50 dark:border-white/5"
-                : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
-            }`}
-          >
-            <Activity className="h-4 w-4" />
-            <span>Live Sessions ({connectedSessions.length})</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("users")}
-            className={`flex-1 sm:flex-initial px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            onClick={() => { setActiveTab("users"); setSearchQuery(""); }}
+            className={`px-4 py-1.5 rounded-full text-[10px] font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
               activeTab === "users"
-                ? "bg-white dark:bg-zinc-900 text-green-500 shadow-sm border border-zinc-200/50 dark:border-white/5"
-                : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
+                ? "bg-white dark:bg-[#09090b] text-green-500 shadow-sm border border-zinc-200/50 dark:border-white/10"
+                : "text-zinc-500 hover:text-zinc-950 dark:hover:text-white"
             }`}
           >
-            <Users className="h-4 w-4" />
-            <span>Utilisateurs ({userList.length})</span>
+            <Users className="h-3.5 w-3.5" />
+            <span>Membres ({profiles.length})</span>
           </button>
+          
           <button
-            onClick={() => setActiveTab("sql")}
-            className={`flex-1 sm:flex-initial px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
-              activeTab === "sql"
-                ? "bg-white dark:bg-zinc-900 text-green-500 shadow-sm border border-zinc-200/50 dark:border-white/5"
-                : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
+            onClick={() => { setActiveTab("publications"); setSearchQuery(""); }}
+            className={`px-4 py-1.5 rounded-full text-[10px] font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              activeTab === "publications"
+                ? "bg-white dark:bg-[#09090b] text-green-500 shadow-sm border border-zinc-200/50 dark:border-white/10"
+                : "text-zinc-500 hover:text-zinc-950 dark:hover:text-white"
             }`}
           >
-            <Database className="h-4 w-4" />
-            <span>Supabase SQL</span>
+            <Layers className="h-3.5 w-3.5" />
+            <span>Publications ({projects.length + events.length})</span>
           </button>
         </div>
       </div>
 
-      {/* Tab 1: Connected Live Sessions */}
-      {activeTab === "sessions" && (
-        <div className="space-y-6">
-          {/* Quick Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-white dark:bg-[#09090b]/40 border border-zinc-200/60 dark:border-white/10 p-5 rounded-2xl flex items-center gap-4">
-              <div className="h-10 w-10 rounded-xl bg-green-500/10 flex items-center justify-center text-green-500 shrink-0">
-                <Globe className="h-5 w-5 animate-spin duration-10000" />
-              </div>
+      {/* Tab 1: Users (Manage & Add People) */}
+      {activeTab === "users" && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* Add People Form Panel (Ultra compact styling) */}
+          <div className="lg:col-span-1">
+            <div className="bg-white dark:bg-[#09090b]/40 border border-zinc-200/60 dark:border-white/10 rounded-xl p-4 space-y-4 shadow-sm sticky top-28">
               <div>
-                <span className="text-[10px] font-mono font-bold text-zinc-400 block uppercase tracking-wider">Actifs Globaux</span>
-                <span className="text-2xl font-black font-mono text-zinc-900 dark:text-white">{connectedSessions.length}</span>
+                <h3 className="text-xs font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
+                  <UserPlus className="h-4 w-4 text-green-500" />
+                  Inscrire un Développeur
+                </h3>
+                <p className="text-zinc-500 text-[9px] mt-0.5">
+                  Ajoutez un nouveau profil de développeur manuellement dans l'annuaire DevConnect Africa.
+                </p>
               </div>
-            </div>
 
-            <div className="bg-white dark:bg-[#09090b]/40 border border-zinc-200/60 dark:border-white/10 p-5 rounded-2xl flex items-center gap-4">
-              <div className="h-10 w-10 rounded-xl bg-yellow-500/10 flex items-center justify-center text-yellow-500 shrink-0">
-                <MapPin className="h-5 w-5" />
-              </div>
-              <div>
-                <span className="text-[10px] font-mono font-bold text-zinc-400 block uppercase tracking-wider">Lomé & Maritimes</span>
-                <span className="text-2xl font-black font-mono text-zinc-900 dark:text-white">
-                  {connectedSessions.filter(s => s.location === "Lomé" || s.location === "Tsévié").length}
-                </span>
-              </div>
-            </div>
+              <form onSubmit={handleCreateUser} className="space-y-3">
+                <div className="space-y-1">
+                  <label className="text-[9px] font-bold text-zinc-600 dark:text-zinc-400 block uppercase tracking-wider">
+                    Nom Complet *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ex: Koffi Adebayor"
+                    value={newUserName}
+                    onChange={(e) => setNewUserName(e.target.value)}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-white/10 bg-zinc-50/50 dark:bg-zinc-900/50 text-[10px] outline-none focus:border-green-500 text-zinc-900 dark:text-white"
+                  />
+                </div>
 
-            <div className="bg-white dark:bg-[#09090b]/40 border border-zinc-200/60 dark:border-white/10 p-5 rounded-2xl flex items-center gap-4">
-              <div className="h-10 w-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 shrink-0">
-                <TrendingUp className="h-5 w-5" />
-              </div>
-              <div>
-                <span className="text-[10px] font-mono font-bold text-zinc-400 block uppercase tracking-wider">Total Projets</span>
-                <span className="text-2xl font-black font-mono text-zinc-900 dark:text-white">{projects.length}</span>
-              </div>
-            </div>
+                <div className="space-y-1">
+                  <label className="text-[9px] font-bold text-zinc-600 dark:text-zinc-400 block uppercase tracking-wider">
+                    Adresse Email *
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="Ex: k.adebayor@tech.tg"
+                    value={newUserEmail}
+                    onChange={(e) => setNewUserEmail(e.target.value)}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-white/10 bg-zinc-50/50 dark:bg-zinc-900/50 text-[10px] outline-none focus:border-green-500 text-zinc-900 dark:text-white"
+                  />
+                </div>
 
-            <div className="bg-white dark:bg-[#09090b]/40 border border-zinc-200/60 dark:border-white/10 p-5 rounded-2xl flex items-center gap-4">
-              <div className="h-10 w-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500 shrink-0">
-                <Flame className="h-5 w-5 animate-pulse" />
-              </div>
-              <div>
-                <span className="text-[10px] font-mono font-bold text-zinc-400 block uppercase tracking-wider">Meetups Togo</span>
-                <span className="text-2xl font-black font-mono text-zinc-900 dark:text-white">{events.length}</span>
-              </div>
-            </div>
-          </div>
+                <div className="space-y-1">
+                  <label className="text-[9px] font-bold text-zinc-600 dark:text-zinc-400 block uppercase tracking-wider">
+                    Poste / Spécialisation *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ex: Développeur Flutter & Mobile"
+                    value={newUserTitle}
+                    onChange={(e) => setNewUserTitle(e.target.value)}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-white/10 bg-zinc-50/50 dark:bg-zinc-900/50 text-[10px] outline-none focus:border-green-500 text-zinc-900 dark:text-white"
+                  />
+                </div>
 
-          {/* Active Sessions List */}
-          <div className="bg-white dark:bg-[#09090b]/40 border border-zinc-200/60 dark:border-white/10 rounded-3xl overflow-hidden shadow-sm">
-            <div className="px-6 py-4 border-b border-zinc-150 dark:border-white/5 flex justify-between items-center bg-zinc-50/50 dark:bg-[#09090b]/20">
-              <div className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
-                <h3 className="text-sm font-bold text-zinc-800 dark:text-white">Sessions Actives en Temps Réel</h3>
-              </div>
-              <button
-                onClick={generateLiveSessions}
-                disabled={refreshing}
-                className="p-1.5 rounded-lg border border-zinc-200 dark:border-white/5 text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
-              >
-                <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-              </button>
-            </div>
-
-            <div className="divide-y divide-zinc-100 dark:divide-white/5">
-              {connectedSessions.map((session) => (
-                <div key={session.id} className="p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:bg-zinc-50/30 dark:hover:bg-zinc-900/10 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={session.avatar}
-                      alt={session.name}
-                      className="h-10 w-10 rounded-xl object-cover ring-2 ring-green-500/20"
-                      referrerPolicy="no-referrer"
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-bold text-zinc-600 dark:text-zinc-400 block uppercase tracking-wider">
+                      Localisation (Ville, Pays) *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ex: Dakar, Sénégal"
+                      value={newUserLocation}
+                      onChange={(e) => setNewUserLocation(e.target.value)}
+                      className="w-full px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-white/10 bg-zinc-50/50 dark:bg-zinc-900/50 text-[10px] outline-none focus:border-green-500 text-zinc-900 dark:text-white"
                     />
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-sm text-zinc-900 dark:text-white">{session.name}</span>
-                        <span className="text-[9px] font-mono bg-zinc-100 dark:bg-zinc-900 text-zinc-500 px-1.5 py-0.5 rounded border dark:border-white/5">
-                          {session.ip}
-                        </span>
-                      </div>
-                      <div className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1 mt-0.5">
-                        <MapPin className="h-3 w-3 text-yellow-500" />
-                        <span>{session.location}, Togo</span>
-                      </div>
-                    </div>
                   </div>
 
-                  <div className="flex items-center gap-4 self-stretch sm:self-auto justify-between sm:justify-end">
-                    <div className="text-right">
-                      <div className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
-                        Activités : <strong className="font-bold text-green-600 dark:text-green-400">{session.action}</strong>
-                      </div>
-                      <span className="text-[10px] font-mono text-zinc-400 block mt-0.5">Actif il y a {session.time}</span>
-                    </div>
-                    <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse shrink-0"></span>
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-bold text-zinc-600 dark:text-zinc-400 block uppercase tracking-wider">
+                      Compétences
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="React, Swift, Go"
+                      value={newUserSkills}
+                      onChange={(e) => setNewUserSkills(e.target.value)}
+                      className="w-full px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-white/10 bg-zinc-50/50 dark:bg-zinc-900/50 text-[10px] outline-none focus:border-green-500 text-zinc-900 dark:text-white"
+                      title="Séparez les compétences par des virgules"
+                    />
                   </div>
                 </div>
-              ))}
+
+                <div className="space-y-1">
+                  <label className="text-[9px] font-bold text-zinc-600 dark:text-zinc-400 block uppercase tracking-wider">
+                    Biographie
+                  </label>
+                  <textarea
+                    placeholder="Courte description du développeur..."
+                    rows={2}
+                    value={newUserBio}
+                    onChange={(e) => setNewUserBio(e.target.value)}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-white/10 bg-zinc-50/50 dark:bg-zinc-900/50 text-[10px] outline-none focus:border-green-500 text-zinc-900 dark:text-white resize-none"
+                  ></textarea>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-2 rounded-lg bg-green-500 hover:bg-green-400 text-black font-extrabold text-[10px] transition-all flex items-center justify-center gap-1 cursor-pointer shadow-md shadow-green-500/10"
+                >
+                  <Plus className="h-3 w-3" />
+                  Ajouter le Développeur
+                </button>
+              </form>
             </div>
+          </div>
+
+          {/* User profiles database listing (Denser grid style) */}
+          <div className="lg:col-span-2 space-y-3">
+            
+            {/* Search Input */}
+            <div className="relative">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400" />
+              <input
+                type="text"
+                placeholder="Rechercher par nom, email, poste ou ville au Togo..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 rounded-lg border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-[#09090b]/40 text-[10px] focus:border-green-500 outline-none text-zinc-900 dark:text-white transition-all shadow-sm"
+              />
+            </div>
+
+            {/* List Table wrapper - Compact columns and cell margins */}
+            <div className="bg-white dark:bg-[#09090b]/30 border border-zinc-200/60 dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-[10px]">
+                  <thead>
+                    <tr className="border-b border-zinc-100 dark:border-white/5 bg-zinc-50/40 dark:bg-[#09090b]/40 font-mono font-bold text-zinc-400 uppercase tracking-wider text-[9px]">
+                      <th className="p-2.5 pl-4">Développeur</th>
+                      <th className="p-2.5">Poste / Spécialisation</th>
+                      <th className="p-2.5">Ville</th>
+                      <th className="p-2.5">Statut</th>
+                      <th className="p-2.5 text-right pr-4">Gestion</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-100 dark:divide-white/5">
+                    {filteredProfiles.map((user) => (
+                      <tr key={user.id} className="hover:bg-zinc-50/30 dark:hover:bg-zinc-900/10 transition-colors">
+                        
+                        {/* Name & Avatar initials */}
+                        <td className="p-2.5 pl-4 flex items-center gap-2">
+                          <DeveloperAvatar
+                            name={user.name}
+                            avatar={user.avatar}
+                            sizeClassName="h-7 w-7 text-[10px]"
+                          />
+                          <div>
+                            <div className="font-bold text-zinc-900 dark:text-white text-[11px] leading-tight">{user.name}</div>
+                            <div className="text-[9px] text-zinc-400 font-mono flex items-center gap-1 mt-0.5">
+                              <Mail className="h-2.5 w-2.5 text-zinc-400 dark:text-zinc-600" />
+                              {user.email}
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Title */}
+                        <td className="p-2.5 text-zinc-700 dark:text-zinc-300 font-medium truncate max-w-[150px]">
+                          {user.title}
+                        </td>
+
+                        {/* Location */}
+                        <td className="p-2.5">
+                          <span className="inline-flex items-center gap-0.5 text-zinc-500 dark:text-zinc-400 font-medium">
+                            <MapPin className="h-3 w-3 text-yellow-500" />
+                            {user.location}, TG
+                          </span>
+                        </td>
+
+                        {/* Status (Admin / User) */}
+                        <td className="p-2.5">
+                          {user.isAdmin ? (
+                            <span className="inline-flex items-center gap-0.5 bg-green-500/10 text-green-600 dark:text-green-400 px-1.5 py-0.5 rounded-full font-bold font-mono text-[8px] border border-green-500/15">
+                              <Shield className="h-2.5 w-2.5" />
+                              ADMIN
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-0.5 bg-zinc-100 dark:bg-zinc-900/60 text-zinc-400 px-1.5 py-0.5 rounded-full font-bold font-mono text-[8px]">
+                              MEMBRE
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Actions */}
+                        <td className="p-2.5 text-right pr-4">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => handleToggleAdminClick(user.id, user.name, !!user.isAdmin)}
+                              className={`px-2 py-0.5 rounded text-[8px] font-bold transition-all cursor-pointer ${
+                                user.isAdmin
+                                  ? "bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400"
+                                  : "bg-green-500/10 hover:bg-green-500/20 text-green-600 dark:text-green-400"
+                              }`}
+                              title="Changer le rôle d'accès"
+                            >
+                              Rôle
+                            </button>
+                            
+                            <button
+                              onClick={() => handleDeleteUserClick(user.id, user.name)}
+                              disabled={user.email === "michelame.yovo@gmail.com"}
+                              className="p-1 rounded text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                              title="Exclure ce membre"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+
+                    {filteredProfiles.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="p-8 text-center text-zinc-400 italic">
+                          Aucun membre inscrit ne correspond à votre filtre.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
           </div>
         </div>
       )}
 
-      {/* Tab 2: User Profiles Registry */}
-      {activeTab === "users" && (
-        <div className="space-y-6">
-          {/* Search controls */}
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
-            <input
-              type="text"
-              placeholder="Rechercher par nom, email, titre ou ville au Togo..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 rounded-2xl border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-[#09090b]/40 text-sm focus:border-green-500 outline-none text-zinc-900 dark:text-white transition-all shadow-sm"
-            />
-          </div>
-
-          <div className="bg-white dark:bg-[#09090b]/40 border border-zinc-200/60 dark:border-white/10 rounded-3xl overflow-hidden shadow-sm">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="border-b border-zinc-150 dark:border-white/5 bg-zinc-50/50 dark:bg-[#09090b]/20 font-mono font-bold text-zinc-500 uppercase tracking-wider">
-                    <th className="p-4 pl-6">Développeur</th>
-                    <th className="p-4">Titre / Rôle</th>
-                    <th className="p-4">Ville</th>
-                    <th className="p-4">Rôle Système</th>
-                    <th className="p-4 text-right pr-6">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-100 dark:divide-white/5">
-                  {filteredUsers.map((user) => (
-                    <tr key={user.id} className="hover:bg-zinc-50/20 dark:hover:bg-zinc-900/5 transition-colors">
-                      {/* Name & Avatar */}
-                      <td className="p-4 pl-6 flex items-center gap-3">
-                        <img
-                          src={user.avatar}
-                          alt={user.name}
-                          className="h-9 w-9 rounded-xl object-cover ring-1 ring-zinc-200 dark:ring-zinc-800"
-                          referrerPolicy="no-referrer"
-                        />
-                        <div>
-                          <div className="font-bold text-zinc-900 dark:text-white text-sm">{user.name}</div>
-                          <div className="text-[10px] text-zinc-400 font-mono">{user.email}</div>
-                        </div>
-                      </td>
-
-                      {/* Title */}
-                      <td className="p-4 text-zinc-700 dark:text-zinc-300 font-medium">
-                        {user.title}
-                      </td>
-
-                      {/* Location */}
-                      <td className="p-4">
-                        <span className="inline-flex items-center gap-1 text-zinc-600 dark:text-zinc-300">
-                          <MapPin className="h-3 w-3 text-yellow-500" />
-                          {user.location || "Lomé"}
-                        </span>
-                      </td>
-
-                      {/* System Role */}
-                      <td className="p-4">
-                        {user.isAdmin ? (
-                          <span className="inline-flex items-center gap-1 bg-green-500/10 text-green-600 dark:text-green-400 px-2 py-0.5 rounded-md font-bold font-mono text-[10px] border border-green-500/15">
-                            <Shield className="h-3 w-3" />
-                            ADMIN
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 bg-zinc-100 dark:bg-zinc-900 text-zinc-500 px-2 py-0.5 rounded-md font-semibold font-mono text-[10px]">
-                            USER
-                          </span>
-                        )}
-                      </td>
-
-                      {/* Actions */}
-                      <td className="p-4 text-right pr-6">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => handleToggleAdminStatus(user.id, user.name, !user.isAdmin)}
-                            title={user.isAdmin ? "Rétrograder en utilisateur standard" : "Promouvoir au rôle Administrateur"}
-                            className={`p-1.5 rounded-lg border text-xs font-bold transition-all cursor-pointer ${
-                              user.isAdmin
-                                ? "border-amber-500/20 bg-amber-500/5 text-amber-600 dark:text-amber-400 hover:bg-amber-500/15"
-                                : "border-green-500/20 bg-green-500/5 text-green-600 dark:text-green-400 hover:bg-green-500/15"
-                            }`}
-                          >
-                            Rôle
-                          </button>
-                          
-                          <button
-                            onClick={() => handleDeleteUser(user.id, user.name)}
-                            disabled={user.email === "michelame.yovo@gmail.com"}
-                            className="p-1.5 rounded-lg border border-rose-500/20 bg-rose-500/5 text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                            title="Supprimer définitivement"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-
-                  {filteredUsers.length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="p-8 text-center text-zinc-500">
-                        Aucun développeur ne correspond à cette recherche.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Tab 3: Database & SQL Console */}
-      {activeTab === "sql" && (
-        <div className="animate-in fade-in duration-250">
-          {/* Explanatory banner */}
-          <div className="bg-zinc-50 dark:bg-[#09090b]/40 border border-zinc-200/60 dark:border-white/10 rounded-2xl p-5 mb-6 text-xs text-zinc-500 space-y-2">
-            <h4 className="font-bold text-zinc-800 dark:text-zinc-200 text-sm flex items-center gap-1.5">
-              <Database className="h-4 w-4 text-green-500" />
-              Accès Console Exclusif à l'Administrateur
-            </h4>
-            <p className="leading-relaxed">
-              La console d'intégration SQL de Supabase a été retirée du pied de page et des menus pour l'utilisateur standard conformément à vos instructions. Vous y accédez ici de manière sécurisée en tant qu'administrateur de DevConnect.
-            </p>
-          </div>
+      {/* Tab 2: Publications (Projects & Events Management) */}
+      {activeTab === "publications" && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           
-          <SupabaseSqlView />
+          {/* Projects Management section */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-1.5 pb-1.5 border-b border-zinc-100 dark:border-white/5">
+              <Briefcase className="h-4 w-4 text-green-500" />
+              <h3 className="font-extrabold text-[10px] text-zinc-950 dark:text-white uppercase tracking-wider">
+                Projets Partagés ({projects.length})
+              </h3>
+            </div>
+
+            <div className="space-y-2">
+              {projects.map((proj) => (
+                <div 
+                  key={proj.id} 
+                  className="p-3 bg-white dark:bg-[#09090b]/40 border border-zinc-200/60 dark:border-white/10 rounded-xl flex justify-between items-start gap-3 hover:border-zinc-300 dark:hover:border-white/15 transition-all"
+                >
+                  <div className="space-y-1">
+                    <h4 className="font-bold text-[11px] text-zinc-900 dark:text-white leading-tight">
+                      {proj.title}
+                    </h4>
+                    <p className="text-zinc-500 dark:text-zinc-400 text-[10px] line-clamp-2 leading-relaxed">
+                      {proj.description}
+                    </p>
+                    <div className="flex items-center gap-1.5 pt-0.5">
+                      <DeveloperAvatar
+                        name={proj.authorName}
+                        avatar={proj.authorAvatar}
+                        sizeClassName="h-4 w-4 text-[7px]"
+                      />
+                      <span className="text-[9px] text-zinc-400">
+                        Par <strong className="font-bold text-zinc-600 dark:text-zinc-300">{proj.authorName}</strong>
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => handleDeleteProjectClick(proj.id, proj.title)}
+                    className="p-1 rounded-lg text-zinc-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/10 shrink-0 transition-all cursor-pointer"
+                    title="Supprimer la publication"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+
+              {projects.length === 0 && (
+                <div className="p-6 text-center border border-dashed border-zinc-200 dark:border-white/5 rounded-xl text-zinc-400 italic">
+                  Aucun projet publié à ce jour.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Events Management section */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-1.5 pb-1.5 border-b border-zinc-100 dark:border-white/5">
+              <Calendar className="h-4 w-4 text-green-500" />
+              <h3 className="font-extrabold text-[10px] text-zinc-950 dark:text-white uppercase tracking-wider">
+                Événements Programmés ({events.length})
+              </h3>
+            </div>
+
+            <div className="space-y-2">
+              {events.map((evt) => {
+                const eventDate = new Date(evt.date);
+                const formattedDate = isNaN(eventDate.getTime()) 
+                  ? evt.date 
+                  : eventDate.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+
+                return (
+                  <div 
+                    key={evt.id} 
+                    className="p-3 bg-white dark:bg-[#09090b]/40 border border-zinc-200/60 dark:border-white/10 rounded-xl flex justify-between items-start gap-3 hover:border-zinc-300 dark:hover:border-white/15 transition-all"
+                  >
+                    <div className="space-y-1">
+                      <h4 className="font-bold text-[11px] text-zinc-900 dark:text-white leading-tight">
+                        {evt.title}
+                      </h4>
+                      <p className="text-zinc-500 dark:text-zinc-400 text-[10px] line-clamp-2 leading-relaxed">
+                        {evt.description}
+                      </p>
+                      <div className="flex items-center gap-1.5 text-[9px] text-zinc-400 pt-0.5">
+                        <MapPin className="h-2.5 w-2.5 text-yellow-500" />
+                        <span>{evt.venue} ({evt.location})</span>
+                        <span>•</span>
+                        <span className="font-semibold text-green-600 dark:text-green-400">{formattedDate}</span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handleDeleteEventClick(evt.id, evt.title)}
+                      className="p-1 rounded-lg text-zinc-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/10 shrink-0 transition-all cursor-pointer"
+                      title="Annuler l'événement"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                );
+              })}
+
+              {events.length === 0 && (
+                <div className="p-6 text-center border border-dashed border-zinc-200 dark:border-white/5 rounded-xl text-zinc-400 italic">
+                  Aucun événement programmé à ce jour.
+                </div>
+              )}
+            </div>
+          </div>
+
         </div>
       )}
 

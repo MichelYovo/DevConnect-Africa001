@@ -2,6 +2,7 @@ import React from "react";
 import { useApp } from "../context/AppContext";
 import { getTranslation, getFormattedDate } from "../i18n";
 import { motion } from "motion/react";
+import DeveloperAvatar from "./DeveloperAvatar";
 import { 
   ArrowRight, 
   MapPin, 
@@ -47,74 +48,138 @@ export default function LandingView() {
     }
   };
 
+  // Track mouse coordinates over the hero card for the "Anti-Gravité" and "LoopAudit" spotlight pull effect
+  const heroCardRef = React.useRef<HTMLDivElement>(null);
+  const [heroMouse, setHeroMouse] = React.useState({ x: 0, y: 0, opacity: 0 });
+
+  const handleHeroMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!heroCardRef.current) return;
+    const rect = heroCardRef.current.getBoundingClientRect();
+    setHeroMouse({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+      opacity: 1
+    });
+  };
+
+  const handleHeroMouseLeave = () => {
+    setHeroMouse(prev => ({ ...prev, opacity: 0 }));
+  };
+
   const selectedDev = profiles.find(p => p.id === selectedDevId);
 
   return (
     <div className="space-y-16 pb-20">
       
-      {/* 1. Hero Section (Bento Grid & Glass style) */}
-      <section className="relative pt-12 pb-16 md:pt-20 md:pb-24 overflow-hidden">
+      {/* 1. Hero Section (LoopAudit & Anti-Gravité Inspired) */}
+      <section className="relative pt-6 pb-12 overflow-hidden">
         
-        {/* Background effects */}
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(45rem_50rem_at_50%_-10rem,rgba(34,197,94,0.06),transparent)]"></div>
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 h-72 w-72 rounded-full bg-green-500/5 blur-3xl"></div>
-        <div className="absolute top-1/3 left-1/4 -translate-x-1/2 -translate-y-1/2 -z-10 h-48 w-48 rounded-full bg-yellow-400/5 blur-3xl animate-pulse"></div>
+        {/* Soft, beautiful external backdrop ambient glow (Responsive for Light/Dark) */}
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(50rem_50rem_at_50%_50%,rgba(34,197,94,0.12),transparent_80%)] dark:bg-[radial-gradient(50rem_50rem_at_50%_50%,rgba(16,185,129,0.06),transparent_80%)]"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 h-[500px] w-[500px] rounded-full bg-green-500/5 dark:bg-green-500/10 blur-[140px]"></div>
 
-        <div className="text-center space-y-6 max-w-4xl mx-auto px-4">
+        {/* The Floating Bento Card */}
+        <div 
+          ref={heroCardRef}
+          onMouseMove={handleHeroMouseMove}
+          onMouseLeave={handleHeroMouseLeave}
+          className="relative max-w-5xl mx-auto rounded-[36px] border border-zinc-200/80 dark:border-white/10 bg-[#f9fafb] dark:bg-[#030303] text-zinc-900 dark:text-white p-6 sm:p-10 md:p-14 overflow-hidden shadow-2xl transition-all duration-300 group"
+        >
           
-          {/* Togo Tech Badge */}
-          <motion.div 
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 rounded-full border border-green-500/20 dark:border-green-500/30 bg-green-50/50 dark:bg-green-950/10 px-4 py-1.5 text-xs font-semibold text-green-700 dark:text-green-400 backdrop-blur"
-          >
-            <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
-            <span>{getTranslation(language, "togoPriority")}</span>
-            <span className="text-zinc-300 dark:text-zinc-700 font-normal">|</span>
-            <span className="flex items-center gap-1">
-              🇹🇬 Lomé • Kara • Kpalimé
-            </span>
-          </motion.div>
+          {/* Subtle Grid overlay inside the card */}
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.03)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:3.5rem_3.5rem] [mask-image:radial-gradient(ellipse_100%_100%_at_50%_50%,#000_60%,transparent_100%)] pointer-events-none" />
 
-          <motion.h1 
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-zinc-900 dark:text-white leading-none"
-          >
-            {getTranslation(language, "landingTitle")}
-          </motion.h1>
+          {/* Magnetic/Interactive spotlight trail that pulls on cursor */}
+          <div 
+            className="absolute inset-0 pointer-events-none transition-opacity duration-300"
+            style={{
+              opacity: heroMouse.opacity,
+              background: `radial-gradient(280px circle at ${heroMouse.x}px ${heroMouse.y}px, rgba(34, 197, 94, 0.12), transparent 80%)`,
+            }}
+          />
 
-          <motion.p 
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-lg sm:text-xl text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto font-normal leading-relaxed"
-          >
-            {getTranslation(language, "landingSubtitle")}
-          </motion.p>
+          {/* Interactive grid square highlight under the cursor */}
+          <div 
+            className="absolute inset-0 bg-[linear-gradient(to_right,rgba(34,197,94,0.18)_1.5px,transparent_1.5px),linear-gradient(to_bottom,rgba(34,197,94,0.18)_1.5px,transparent_1.5px)] bg-[size:3.5rem_3.5rem] pointer-events-none transition-opacity duration-300"
+            style={{
+              opacity: heroMouse.opacity,
+              maskImage: `radial-gradient(180px circle at ${heroMouse.x}px ${heroMouse.y}px, black, transparent)`,
+              WebkitMaskImage: `radial-gradient(180px circle at ${heroMouse.x}px ${heroMouse.y}px, black, transparent)`,
+            }}
+          />
 
-          <motion.div 
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-4"
-          >
-            <button
-              onClick={handleJoinCommunity}
-              className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-green-500 hover:bg-green-400 text-black font-bold shadow-md shadow-green-500/15 transition-all flex items-center justify-center gap-2 group cursor-pointer"
+          {/* Floating illuminated squares in the background */}
+          <div className="absolute top-1/4 left-1/6 h-14 w-14 rounded-xl bg-green-500/[0.03] dark:bg-green-500/[0.02] border border-green-500/10 animate-pulse pointer-events-none" />
+          <div className="absolute bottom-1/3 right-1/8 h-20 w-20 rounded-2xl bg-emerald-500/[0.02] dark:bg-emerald-500/[0.01] border border-emerald-500/5 animate-pulse pointer-events-none" />
+
+          {/* Central Hero text Block */}
+          <div className="text-center space-y-6 sm:space-y-8 max-w-3xl mx-auto pt-10 sm:pt-14 relative z-10">
+            
+            {/* The Pill Indicator */}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5 }}
+              className="inline-flex items-center gap-2 rounded-full border border-green-500/20 dark:border-green-500/30 bg-green-500/5 px-4.5 py-1.5 text-[11px] font-bold text-green-700 dark:text-green-400 backdrop-blur"
             >
-              {getTranslation(language, "getStarted")}
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </button>
-            <button
-              onClick={() => setView("projects")}
-              className="w-full sm:w-auto px-6 py-3.5 rounded-xl border border-zinc-200 dark:border-white/10 bg-white/60 dark:bg-zinc-900/60 text-zinc-700 dark:text-zinc-300 font-semibold hover:bg-zinc-50 dark:hover:bg-[#09090b] hover:text-zinc-950 dark:hover:text-white transition-all backdrop-blur"
+              <span className="flex h-2 w-2 rounded-full bg-green-500 animate-ping"></span>
+              <span>1200+ développeurs togolais déjà connectés ✓</span>
+            </motion.div>
+
+            {/* Headline and Handwritten cursive highlight */}
+            <div className="space-y-3">
+              <motion.h1 
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-zinc-900 dark:text-white leading-none font-sans"
+              >
+                {getTranslation(language, "landingTitle")}
+              </motion.h1>
+              
+              <motion.span 
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                className="font-cursive text-green-500 dark:text-green-400 text-5xl sm:text-6xl md:text-7xl block font-normal tracking-wide py-1 animate-pulse"
+              >
+                DevConnect Africa
+              </motion.span>
+            </div>
+
+            {/* Description Subtitle */}
+            <motion.p 
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="text-xs sm:text-sm md:text-base text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto font-medium leading-relaxed"
             >
-              {getTranslation(language, "viewProjects")}
-            </button>
-          </motion.div>
+              {getTranslation(language, "landingSubtitle")}
+            </motion.p>
+
+            {/* Two Call to Action Buttons */}
+            <motion.div 
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-2"
+            >
+              <button
+                onClick={handleJoinCommunity}
+                className="w-full sm:w-auto px-7 py-3.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 text-black font-extrabold text-xs transition-all shadow-lg shadow-green-500/20 hover:scale-[1.03] cursor-pointer flex items-center justify-center gap-2 group"
+              >
+                {getTranslation(language, "getStarted")}
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </button>
+              <button
+                onClick={() => setView("projects")}
+                className="w-full sm:w-auto px-7 py-3.5 rounded-full border border-zinc-200 dark:border-white/10 bg-white/40 dark:bg-white/5 text-zinc-700 dark:text-zinc-300 font-bold text-xs hover:bg-white dark:hover:bg-white/10 hover:text-zinc-950 dark:hover:text-white transition-all backdrop-blur"
+              >
+                {getTranslation(language, "viewProjects")}
+              </button>
+            </motion.div>
+
+          </div>
 
         </div>
       </section>
@@ -227,11 +292,10 @@ export default function LandingView() {
                 
                 {/* Header Profile */}
                 <div className="flex gap-4">
-                  <img
-                    src={dev.avatar}
-                    alt={dev.name}
-                    className="h-14 w-14 rounded-2xl object-cover ring-2 ring-green-500/10 group-hover:ring-green-500 transition-all"
-                    referrerPolicy="no-referrer"
+                  <DeveloperAvatar
+                    name={dev.name}
+                    avatar={dev.avatar}
+                    sizeClassName="h-14 w-14"
                   />
                   <div>
                     <h3 className="text-base font-bold text-zinc-900 dark:text-white group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors flex items-center gap-1.5">
@@ -320,11 +384,10 @@ export default function LandingView() {
                 
                 {/* Author Info */}
                 <div className="flex items-center gap-2">
-                  <img
-                    src={proj.authorAvatar}
-                    alt={proj.authorName}
-                    className="h-5 w-5 rounded-full object-cover"
-                    referrerPolicy="no-referrer"
+                  <DeveloperAvatar
+                    name={proj.authorName}
+                    avatar={proj.authorAvatar}
+                    sizeClassName="h-5 w-5 text-[8px]"
                   />
                   <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
                     {getTranslation(language, "author")} : <strong className="font-semibold text-zinc-700 dark:text-zinc-300">{proj.authorName}</strong>
@@ -495,11 +558,10 @@ export default function LandingView() {
               
               {/* Profile Meta Header */}
               <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
-                <img
-                  src={selectedDev.avatar}
-                  alt={selectedDev.name}
-                  className="h-28 w-28 rounded-2xl object-cover ring-4 ring-white dark:ring-zinc-950 shadow-lg"
-                  referrerPolicy="no-referrer"
+                <DeveloperAvatar
+                  name={selectedDev.name}
+                  avatar={selectedDev.avatar}
+                  sizeClassName="h-28 w-28 text-3xl ring-4 ring-white dark:ring-zinc-950 shadow-lg"
                 />
                 <div className="pb-1">
                   <h3 className="text-2xl font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">

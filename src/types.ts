@@ -26,6 +26,8 @@ export interface Project {
   createdAt: string;
   likes: number;
   likedBy: string[]; // List of user IDs who liked
+  techStackIdeal?: string;
+  pitchDeck?: string;
 }
 
 export interface Event {

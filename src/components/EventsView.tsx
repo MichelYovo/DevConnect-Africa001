@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useApp } from "../context/AppContext";
 import { getTranslation, getFormattedDate } from "../i18n";
-import { TOGO_CITIES } from "../data";
+import DeveloperAvatar from "./DeveloperAvatar";
 import { 
   Plus, 
   MapPin, 
@@ -14,6 +14,8 @@ import {
   CheckCircle2, 
   ArrowRight 
 } from "lucide-react";
+
+const EVENT_LOCATIONS = ["En ligne", "Togo", "Kenya", "Sénégal", "Nigéria", "Rwanda"];
 
 export default function EventsView() {
   const { 
@@ -31,7 +33,7 @@ export default function EventsView() {
   // Form states
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [location, setLocation] = useState("Lomé");
+  const [location, setLocation] = useState("Dakar, Sénégal");
   const [venue, setVenue] = useState("");
   const [date, setDate] = useState("");
 
@@ -50,7 +52,7 @@ export default function EventsView() {
     // Reset Form
     setTitle("");
     setDescription("");
-    setLocation("Lomé");
+    setLocation("Dakar, Sénégal");
     setVenue("");
     setDate("");
     setIsCreateOpen(false);
@@ -58,7 +60,7 @@ export default function EventsView() {
 
   // Filter events
   const filteredEvents = events.filter((evt) => {
-    if (selectedCity !== "all" && evt.location !== selectedCity) {
+    if (selectedCity !== "all" && !evt.location.toLowerCase().includes(selectedCity.toLowerCase())) {
       return false;
     }
     return true;
@@ -111,7 +113,7 @@ export default function EventsView() {
         >
           Toutes
         </button>
-        {TOGO_CITIES.map((city) => (
+        {EVENT_LOCATIONS.map((city) => (
           <button
             key={city}
             onClick={() => setSelectedCity(city)}
@@ -191,14 +193,13 @@ export default function EventsView() {
                       <div className="flex items-center gap-1">
                         <div className="flex -space-x-2 overflow-hidden">
                           {eventAttendeesProfiles.slice(0, 6).map((ap) => (
-                            <img
-                              key={ap.id}
-                              className="inline-block h-6 w-6 rounded-full ring-2 ring-white dark:ring-zinc-950 object-cover"
-                              src={ap.avatar}
-                              alt={ap.name}
-                              title={ap.name}
-                              referrerPolicy="no-referrer"
-                            />
+                            <div key={ap.id} className="inline-block ring-2 ring-white dark:ring-zinc-950 rounded-full" title={ap.name}>
+                              <DeveloperAvatar
+                                name={ap.name}
+                                avatar={ap.avatar}
+                                sizeClassName="h-6 w-6 text-[8px]"
+                              />
+                            </div>
                           ))}
                         </div>
                         {eventAttendeesProfiles.length > 6 && (
@@ -292,15 +293,14 @@ export default function EventsView() {
                   <label className="text-xs font-semibold text-zinc-600 dark:text-zinc-400 block">
                     {getTranslation(language, "city")} *
                   </label>
-                  <select
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ex: Dakar, Sénégal ou En ligne"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                     className="w-full px-4 py-2.5 rounded-xl border border-zinc-200/60 dark:border-white/10 bg-zinc-50/50 dark:bg-zinc-900/50 text-sm focus:border-green-500 outline-none text-zinc-700 dark:text-zinc-300"
-                  >
-                    {TOGO_CITIES.map((c) => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
+                  />
                 </div>
 
                 <div className="space-y-1">
