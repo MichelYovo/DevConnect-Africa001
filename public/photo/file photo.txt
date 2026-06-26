@@ -15,6 +15,8 @@ List of developer photos available:
 4. Enyonam Kpogo      -> /photo/enyonam_kpogo.jpg
 5. Chinedu Okafor     -> /photo/chinedu_okafor.jpg
 6. Mwangi Mwangi      -> /photo/mwangi_mwangi.jpg
+7. App Logo (JPG)     -> /photo/logo.jpg
+8. App Logo (SVG)     -> /photo/logo.svg
 
 How to add new photos:
 - Place any image (JPG/PNG) into this folder.
