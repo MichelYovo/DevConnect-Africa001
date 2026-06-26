@@ -3,6 +3,7 @@ import { useApp } from "../context/AppContext";
 import { getTranslation, getFormattedDate } from "../i18n";
 import { motion } from "motion/react";
 import DeveloperAvatar from "./DeveloperAvatar";
+import { getFlagForLocation } from "../types";
 import { 
   ArrowRight, 
   MapPin, 
@@ -123,7 +124,7 @@ export default function LandingView() {
               className="inline-flex items-center gap-2 rounded-full border border-green-500/20 dark:border-green-500/30 bg-green-500/5 px-4.5 py-1.5 text-[11px] font-bold text-green-700 dark:text-green-400 backdrop-blur"
             >
               <span className="flex h-2 w-2 rounded-full bg-green-500 animate-ping"></span>
-              <span>1200+ développeurs togolais déjà connectés ✓</span>
+              <span>1200+ développeurs africains déjà connectés ✓</span>
             </motion.div>
 
             {/* Headline and Handwritten cursive highlight */}
@@ -193,10 +194,6 @@ export default function LandingView() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-center">
             
             <div className="space-y-4">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-green-500/10 text-green-600 dark:text-green-400 text-xs font-mono font-semibold">
-                <Sparkles className="h-3.5 w-3.5 animate-pulse text-yellow-400" />
-                TOGO EXCELLENCE
-              </div>
               <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950 dark:text-white">
                 {getTranslation(language, "communityStats")}
               </h2>
@@ -264,11 +261,11 @@ export default function LandingView() {
             <div className="flex items-center gap-2">
               <span className="h-1.5 w-6 rounded bg-green-500"></span>
               <h2 className="text-2xl font-bold tracking-tight text-zinc-950 dark:text-white">
-                {getTranslation(language, "exploreProfiles")} (Togo 🇹🇬)
+                {getTranslation(language, "exploreProfiles")}
               </h2>
             </div>
             <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              Découvrez les talents togolais par excellence basés à Lomé, Kara, Kpalimé et au-delà.
+              Découvrez les talents africains par excellence basés à Lomé, Dakar, Abidjan, Lagos, Nairobi et au-delà.
             </p>
           </div>
           <button
@@ -309,7 +306,7 @@ export default function LandingView() {
                     </p>
                     <div className="flex items-center gap-1 mt-1 text-zinc-400 dark:text-zinc-500 text-[11px]">
                       <MapPin className="h-3 w-3 text-yellow-500" />
-                      <span>{dev.location}, Togo 🇹🇬</span>
+                      <span>{dev.location}{getFlagForLocation(dev.location)}</span>
                     </div>
                   </div>
                 </div>
@@ -358,11 +355,11 @@ export default function LandingView() {
             <div className="flex items-center gap-2">
               <span className="h-1.5 w-6 rounded bg-yellow-400"></span>
               <h2 className="text-2xl font-bold tracking-tight text-zinc-950 dark:text-white">
-                {getTranslation(language, "viewProjects")} (Togo 🇹🇬)
+                {getTranslation(language, "viewProjects")}
               </h2>
             </div>
             <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              Des applications concrètes construites par la communauté pour répondre aux besoins locaux du Togo.
+              Des applications concrètes construites par la communauté pour répondre aux besoins locaux du continent africain.
             </p>
           </div>
           <button
@@ -460,11 +457,11 @@ export default function LandingView() {
             <div className="flex items-center gap-2">
               <span className="h-1.5 w-6 rounded bg-green-500"></span>
               <h2 className="text-2xl font-bold tracking-tight text-zinc-950 dark:text-white">
-                {getTranslation(language, "upcomingEvents")} (Togo 🇹🇬)
+                {getTranslation(language, "upcomingEvents")}
               </h2>
             </div>
             <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              Formations IA, Meetups Javascript, Hackathons, et Ateliers interactifs à Lomé, Kara et Kpalimé.
+              Formations IA, Meetups Javascript, Hackathons, et Ateliers interactifs à Lomé, Dakar, Abidjan, Lagos, Nairobi et en ligne.
             </p>
           </div>
           <button
@@ -575,7 +572,7 @@ export default function LandingView() {
                   </p>
                   <div className="flex items-center gap-1.5 mt-1 text-zinc-500 dark:text-zinc-400 text-xs font-medium">
                     <MapPin className="h-3.5 w-3.5 text-yellow-500" />
-                    <span>{selectedDev.location}, Togo 🇹🇬</span>
+                    <span>{selectedDev.location}{getFlagForLocation(selectedDev.location)}</span>
                     <span className="text-zinc-300 dark:text-zinc-700">•</span>
                     <span>{selectedDev.email}</span>
                   </div>

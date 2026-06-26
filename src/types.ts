@@ -56,3 +56,36 @@ export type ViewType =
   | "settings" 
   | "admin"
   | "supabase-sql";
+
+export const getFlagForLocation = (loc: string): string => {
+  if (!loc) return "";
+  const lower = loc.toLowerCase();
+  
+  if (
+    loc.includes("🇹🇬") || 
+    loc.includes("🇸🇳") || 
+    loc.includes("🇨🇮") || 
+    loc.includes("🇳🇬") || 
+    loc.includes("🇰🇪") || 
+    loc.includes("🇬🇭") || 
+    loc.includes("🇧🇯") || 
+    loc.includes("🇨🇲") || 
+    loc.includes("🇿🇦") || 
+    loc.includes("🇷🇼")
+  ) {
+    return "";
+  }
+
+  if (lower.includes("togo")) return " 🇹🇬";
+  if (lower.includes("sénégal") || lower.includes("senegal")) return " 🇸🇳";
+  if (lower.includes("côte d'ivoire") || lower.includes("ivoire") || lower.includes("ivory")) return " 🇨🇮";
+  if (lower.includes("nigéria") || lower.includes("nigeria")) return " 🇳🇬";
+  if (lower.includes("kenya")) return " 🇰🇪";
+  if (lower.includes("ghana")) return " 🇬🇭";
+  if (lower.includes("bénin") || lower.includes("benin")) return " 🇧🇯";
+  if (lower.includes("cameroun") || lower.includes("cameroon")) return " 🇨🇲";
+  if (lower.includes("afrique du sud") || lower.includes("south africa")) return " 🇿🇦";
+  if (lower.includes("rwanda")) return " 🇷🇼";
+  return "";
+};
+

@@ -579,59 +579,9 @@ export default function AuthView() {
           )}
         </div>
 
-        {/* Demo persistence notice */}
-        <div className="flex gap-2 items-start bg-zinc-50 dark:bg-[#09090b]/30 p-3 rounded-xl border border-zinc-100 dark:border-white/5">
-          <ShieldCheck className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
-          <span className="text-[9px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
-            {getTranslation(language, "demoAccountNotice")}
-          </span>
-        </div>
 
-        {/* Admin & Test credentials cheat sheet */}
-        <div className="p-4 rounded-2xl border border-zinc-200/65 dark:border-white/5 bg-zinc-100/50 dark:bg-zinc-950/40 text-xs space-y-3">
-          <div className="flex items-center gap-1.5 border-b border-zinc-200/50 dark:border-white/5 pb-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-green-500"></span>
-            <span className="font-bold text-zinc-900 dark:text-white uppercase tracking-wider text-[10px] font-mono">
-              Comptes d'accès de simulation
-            </span>
-          </div>
-          <div className="space-y-2 font-mono text-[10px] text-zinc-600 dark:text-zinc-400">
-            <div className="flex justify-between items-start gap-2">
-              <div>
-                <span className="text-green-600 dark:text-green-400 font-bold">Chef Admin :</span>
-                <p className="font-semibold text-zinc-800 dark:text-zinc-200">michelame.yovo@gmail.com</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail("michelame.yovo@gmail.com");
-                  setPassword("admin123");
-                  showToast(language === "FR" ? "Identifiants admin pré-remplis !" : "Admin credentials prefilled!", "success");
-                }}
-                className="px-2 py-1 rounded bg-green-500/10 text-green-600 dark:text-green-400 hover:bg-green-500/20 transition-all font-bold cursor-pointer shrink-0"
-              >
-                Pré-remplir
-              </button>
-            </div>
-            <div className="flex justify-between items-start gap-2 pt-1 border-t border-zinc-200/30 dark:border-white/5">
-              <div>
-                <span className="text-zinc-500 dark:text-zinc-400 font-bold">Compte Test Dev :</span>
-                <p className="font-semibold text-zinc-800 dark:text-zinc-200">koffi.mensah@devconnect.tg</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail("koffi.mensah@devconnect.tg");
-                  setPassword("password123");
-                  showToast(language === "FR" ? "Identifiants test pré-remplis !" : "Test credentials prefilled!", "success");
-                }}
-                className="px-2 py-1 rounded bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-500/20 transition-all font-bold cursor-pointer shrink-0"
-              >
-                Pré-remplir
-              </button>
-            </div>
-          </div>
-        </div>
+
+
 
       {/* Unified Social OAuth & OTP Connection Modal */}
       {showSocialModal && socialProvider && (
@@ -722,63 +672,7 @@ export default function AuthView() {
                   )}
                 </div>
 
-                {/* Suggestions blocks */}
-                <div className="space-y-2 pt-1">
-                  <span className="text-[9px] font-mono font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider block">
-                    {language === "FR" ? "Comptes simulés suggérés :" : "Suggested Simulated Accounts :"}
-                  </span>
-                  <div className="grid grid-cols-2 gap-2">
-                    {socialProvider === "GitHub" && (
-                      ["michelame", "torvalds", "gaearon", "yyx990803"].map((username) => (
-                        <button
-                          type="button"
-                          key={username}
-                          onClick={() => setSocialInput(username)}
-                          className="px-2.5 py-1.5 rounded-xl border border-zinc-200/50 dark:border-white/5 bg-zinc-50/50 dark:bg-zinc-900/30 text-left hover:border-green-500/30 hover:bg-green-500/5 transition-all text-[10px] text-zinc-700 dark:text-zinc-300 truncate cursor-pointer"
-                        >
-                          @{username}
-                        </button>
-                      ))
-                    )}
-                    {socialProvider === "Google" && (
-                      [
-                        { label: "Admin Michelame", email: "michelame.yovo@gmail.com" },
-                        { label: "Koffi Dev", email: "koffi.mensah@devconnect.tg" },
-                        { label: "Abla Designer", email: "abla.lawson@design.tg" },
-                        { label: "Yaovi Backend", email: "yaovi.a@cloud.tg" }
-                      ].map((item) => (
-                        <button
-                          type="button"
-                          key={item.email}
-                          onClick={() => setSocialInput(item.email)}
-                          className="px-2.5 py-1.5 rounded-xl border border-zinc-200/50 dark:border-white/5 bg-zinc-50/50 dark:bg-zinc-900/30 text-left hover:border-green-500/30 hover:bg-green-500/5 transition-all text-[10px] text-zinc-700 dark:text-zinc-300 truncate cursor-pointer"
-                          title={item.email}
-                        >
-                          <span className="font-bold block text-[9px] text-zinc-800 dark:text-zinc-200">{item.label}</span>
-                          <span className="text-zinc-400 dark:text-zinc-500 block text-[8px] truncate">{item.email}</span>
-                        </button>
-                      ))
-                    )}
-                    {socialProvider === "LinkedIn" && (
-                      [
-                        { label: "Koffi Mensah", username: "koffi-mensah" },
-                        { label: "Abla Lawson", username: "abla-lawson" },
-                        { label: "Yaovi Amegadjie", username: "yaovi-amegadjie" },
-                        { label: "Enyonam Kpogo", username: "enyonam-kpogo" }
-                      ].map((item) => (
-                        <button
-                          type="button"
-                          key={item.username}
-                          onClick={() => setSocialInput(item.username)}
-                          className="px-2.5 py-1.5 rounded-xl border border-zinc-200/50 dark:border-white/5 bg-zinc-50/50 dark:bg-zinc-900/30 text-left hover:border-green-500/30 hover:bg-green-500/5 transition-all text-[10px] text-zinc-700 dark:text-zinc-300 truncate cursor-pointer"
-                        >
-                          <span className="font-bold block text-[9px] text-zinc-800 dark:text-zinc-200">{item.label}</span>
-                          <span className="text-zinc-400 dark:text-zinc-500 block text-[8px] truncate">in/{item.username}</span>
-                        </button>
-                      ))
-                    )}
-                  </div>
-                </div>
+
 
                 <button
                   type="submit"
@@ -806,8 +700,8 @@ export default function AuthView() {
                   </h3>
                   <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
                     {language === "FR" 
-                      ? "Consultez les détails importés et personnalisez votre profil togolais de développeur :" 
-                      : "Review imported credentials and customize your Togolese developer profile:"}
+                      ? "Consultez les détails importés et personnalisez votre profil africain de développeur :" 
+                      : "Review imported credentials and customize your African developer profile:"}
                   </p>
                 </div>
 

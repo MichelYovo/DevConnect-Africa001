@@ -3,6 +3,7 @@ import { useApp } from "../context/AppContext";
 import { getTranslation, getShortFormattedDate } from "../i18n";
 import { AFRICAN_COUNTRIES } from "../data";
 import DeveloperAvatar from "./DeveloperAvatar";
+import { getFlagForLocation } from "../types";
 import { 
   Plus, 
   MapPin, 
@@ -325,7 +326,7 @@ export default function DashboardView() {
                         </p>
                         <div className="flex items-center gap-1.5 text-[11px] text-zinc-400 dark:text-zinc-500 mt-0.5">
                           <MapPin className="h-3 w-3 text-yellow-500" />
-                          <span>{dev.location}, Togo 🇹🇬</span>
+                          <span>{dev.location}{getFlagForLocation(dev.location)}</span>
                         </div>
                       </div>
                     </div>

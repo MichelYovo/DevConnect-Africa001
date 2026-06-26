@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react";
 import { useApp } from "../context/AppContext";
 import { getTranslation } from "../i18n";
 import DeveloperAvatar from "./DeveloperAvatar";
+import { getFlagForLocation } from "../types";
 import { 
   User, 
   MapPin, 
@@ -144,7 +145,7 @@ export default function ProfileView() {
               <p className="text-xs text-green-600 dark:text-green-400 font-bold leading-tight">{title || "Poste"}</p>
               <p className="text-[11px] text-zinc-400 flex items-center justify-center gap-1 font-medium">
                 <MapPin className="h-3.5 w-3.5 text-yellow-500" />
-                {location}, Togo 🇹🇬
+                {location}{getFlagForLocation(location)}
               </p>
             </div>
           </div>

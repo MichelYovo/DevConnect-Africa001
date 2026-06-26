@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useApp } from "../context/AppContext";
 import { getTranslation } from "../i18n";
-import { Profile, Project, Event } from "../types";
+import { Profile, Project, Event, getFlagForLocation } from "../types";
 import DeveloperAvatar from "./DeveloperAvatar";
 import { 
   Users, 
@@ -364,7 +364,7 @@ export default function AdminView() {
                         <td className="p-2.5">
                           <span className="inline-flex items-center gap-0.5 text-zinc-500 dark:text-zinc-400 font-medium">
                             <MapPin className="h-3 w-3 text-yellow-500" />
-                            {user.location}, TG
+                            {user.location}{getFlagForLocation(user.location)}
                           </span>
                         </td>
 
