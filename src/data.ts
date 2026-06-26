@@ -1,11 +1,11 @@
 import { Profile, Project, Event } from "./types";
 
-const avatarKoffi = "/src/assets/images/avatar_koffi_mensah_1782487814653.jpg";
-const avatarAbla = "/src/assets/images/avatar_abla_lawson_1782487831921.jpg";
-const avatarFatoumata = "/src/assets/images/avatar_fatoumata_diop_1782487845452.jpg";
-const avatarEnyonam = "/src/assets/images/avatar_enyonam_kpogo_1782487856413.jpg";
-const avatarChinedu = "/src/assets/images/avatar_chinedu_okafor_1782487870160.jpg";
-const avatarMwangi = "/src/assets/images/avatar_mwangi_mwangi_1782487884586.jpg";
+const avatarKoffi = "/photo/koffi_mensah.jpg";
+const avatarAbla = "/photo/abla_lawson.jpg";
+const avatarFatoumata = "/photo/fatoumata_diop.jpg";
+const avatarEnyonam = "/photo/enyonam_kpogo.jpg";
+const avatarChinedu = "/photo/chinedu_okafor.jpg";
+const avatarMwangi = "/photo/mwangi_mwangi.jpg";
 
 export const AFRICAN_COUNTRIES = [
   "Togo",

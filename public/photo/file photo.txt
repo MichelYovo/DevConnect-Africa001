@@ -1,0 +1,22 @@
+DevConnect Africa - Photo File Registry
+======================================
+
+This file lists the paths of all developer photos stored in this directory.
+These photos are served statically from the "/photo" URL in both development (Vite)
+and production environments (including Vercel, Netlify, and custom servers).
+
+Directory Path in Repository: /public/photo/
+Web-accessible URL path:      /photo/<filename>
+
+List of developer photos available:
+1. Koffi Mensah       -> /photo/koffi_mensah.jpg
+2. Abla Lawson        -> /photo/abla_lawson.jpg
+3. Fatoumata Diop     -> /photo/fatoumata_diop.jpg
+4. Enyonam Kpogo      -> /photo/enyonam_kpogo.jpg
+5. Chinedu Okafor     -> /photo/chinedu_okafor.jpg
+6. Mwangi Mwangi      -> /photo/mwangi_mwangi.jpg
+
+How to add new photos:
+- Place any image (JPG/PNG) into this folder.
+- Access it in the React application using "/photo/your_image.jpg".
+- For example, when creating a new user, you can assign them one of these paths.
