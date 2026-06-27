@@ -56,10 +56,53 @@ export default function ProjectsView() {
   const [useOracleOnCreate, setUseOracleOnCreate] = useState(false);
   const [isGeneratingOnCreate, setIsGeneratingOnCreate] = useState(false);
 
+  const cleanHtmlTags = (text: string): string => {
+    if (!text) return "";
+    let cleaned = text;
+    // Remove divs and slide containers
+    cleaned = cleaned.replace(/<div[^>]*>/gi, "");
+    cleaned = cleaned.replace(/<\/div>/gi, "");
+    
+    // Map major headings to markdown
+    cleaned = cleaned.replace(/<h1>/gi, "\n# ");
+    cleaned = cleaned.replace(/<\/h1>/gi, "\n");
+    cleaned = cleaned.replace(/<h2>/gi, "\n## ");
+    cleaned = cleaned.replace(/<\/h2>/gi, "\n");
+    cleaned = cleaned.replace(/<h3>/gi, "\n### ");
+    cleaned = cleaned.replace(/<\/h3>/gi, "\n");
+    
+    // Convert lists to nice paragraph lines
+    cleaned = cleaned.replace(/<ul>/gi, "\n");
+    cleaned = cleaned.replace(/<\/ul>/gi, "\n");
+    cleaned = cleaned.replace(/<li>/gi, "\n");
+    cleaned = cleaned.replace(/<\/li>/gi, "\n");
+    
+    // Convert paragraph tags
+    cleaned = cleaned.replace(/<p>/gi, "\n");
+    cleaned = cleaned.replace(/<\/p>/gi, "\n");
+    
+    // Bold tags
+    cleaned = cleaned.replace(/<strong>/gi, "**");
+    cleaned = cleaned.replace(/<\/strong>/gi, "**");
+    
+    // Br/Hr tags
+    cleaned = cleaned.replace(/<br\s*\/?>/gi, "\n");
+    cleaned = cleaned.replace(/<hr\s*\/?>/gi, "\n---\n");
+    
+    // Strip all remaining html tags
+    cleaned = cleaned.replace(/<[^>]*>/g, "");
+    
+    // Remove excessive newlines
+    cleaned = cleaned.replace(/\n{3,}/g, "\n\n");
+    
+    return cleaned.trim();
+  };
+
   const parseSlides = (markdownText?: string): string[] => {
     if (!markdownText) return [];
+    const cleanText = cleanHtmlTags(markdownText);
     // Split by "---" or slide boundaries
-    let parts = markdownText.split(/---|\n## /);
+    let parts = cleanText.split(/---|\n## /);
     return parts
       .map(p => p.trim())
       .filter(p => p.length > 0)
