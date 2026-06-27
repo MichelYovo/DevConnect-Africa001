@@ -27,6 +27,7 @@ export default function DashboardView() {
     profiles, 
     projects, 
     events, 
+    activities,
     setView, 
     language,
     selectedCityFilter,
@@ -134,10 +135,10 @@ export default function DashboardView() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
         {/* Left Sidebar filters */}
-        <div className="space-y-6 lg:col-span-1">
+        <div className="space-y-6 lg:col-span-3">
           
           {/* Quick Filters Card */}
           <div className="bg-white dark:bg-[#09090b]/40 border border-zinc-200/60 dark:border-white/10 rounded-2xl p-5 space-y-4 shadow-sm">
@@ -253,7 +254,7 @@ export default function DashboardView() {
         </div>
 
         {/* Profiles Grid / Main Area */}
-        <div className="lg:col-span-3 space-y-6">
+        <div className="lg:col-span-6 space-y-6">
           
           {/* Search bar */}
           <div className="relative">
@@ -302,7 +303,7 @@ export default function DashboardView() {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {filteredDevs.map((dev) => (
                 <div
                   key={dev.id}
@@ -383,6 +384,76 @@ export default function DashboardView() {
             </div>
           )}
 
+        </div>
+
+        {/* Right Sidebar - Fil d'Actualité */}
+        <div className="lg:col-span-3 space-y-6">
+          <div className="bg-white dark:bg-[#09090b]/40 border border-zinc-200/60 dark:border-white/10 rounded-2xl p-5 space-y-4 shadow-sm">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-mono font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-green-500" />
+                {language === "FR" ? "Fil d'Actualité" : "Live Feed"}
+              </h3>
+              <span className="flex h-2 w-2 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+              </span>
+            </div>
+
+            <p className="text-[11px] text-zinc-500 leading-relaxed">
+              {language === "FR" 
+                ? "Découvrez l'activité récente de nos développeurs à travers l'Afrique."
+                : "Discover recent activities of our developers across Africa."}
+            </p>
+
+            <div className="space-y-3 max-h-[550px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-200 dark:scrollbar-thumb-zinc-800">
+              {activities.length === 0 ? (
+                <div className="text-center py-6 text-xs text-zinc-400 font-mono">
+                  {language === "FR" ? "Aucune actualité" : "No recent activity"}
+                </div>
+              ) : (
+                activities.slice(0, 10).map((act) => {
+                  let IconComponent = User;
+                  let iconColor = "text-blue-500 bg-blue-500/10";
+                  
+                  if (act.type === "join") {
+                    IconComponent = Sparkles;
+                    iconColor = "text-green-500 bg-green-500/10";
+                  } else if (act.type === "project") {
+                    IconComponent = Code;
+                    iconColor = "text-purple-500 bg-purple-500/10";
+                  } else if (act.type === "event_register") {
+                    IconComponent = Calendar;
+                    iconColor = "text-yellow-500 bg-yellow-500/10";
+                  } else if (act.type === "profile_update") {
+                    IconComponent = User;
+                    iconColor = "text-blue-500 bg-blue-500/10";
+                  }
+
+                  return (
+                    <div 
+                      key={act.id} 
+                      className="group p-3 rounded-xl bg-zinc-50 dark:bg-[#09090b]/60 border border-zinc-150 dark:border-white/5 hover:border-green-500/20 dark:hover:border-green-500/20 transition-all space-y-2 text-xs"
+                    >
+                      <div className="flex items-start gap-2.5">
+                        <div className={`p-1.5 rounded-lg shrink-0 ${iconColor}`}>
+                          <IconComponent className="h-3.5 w-3.5" />
+                        </div>
+                        <div className="space-y-1 min-w-0 flex-1">
+                          <p className="text-zinc-700 dark:text-zinc-200 leading-relaxed font-medium text-[11px]">
+                            {language === "FR" ? act.messageFr : act.messageEn}
+                          </p>
+                          <div className="flex items-center gap-1 text-[9px] text-zinc-400 font-mono">
+                            <span>{getShortFormattedDate(language, act.createdAt)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
         </div>
 
       </div>

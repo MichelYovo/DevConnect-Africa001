@@ -286,7 +286,8 @@ export default function AuthView() {
         ? `https://linkedin.com/in/${socialInput.toLowerCase().replace(/\s+/g, "-")}`
         : `https://linkedin.com/in/${socialName.toLowerCase().replace(/\s+/g, "-")}`,
       email: emailVal,
-      isDemo: false
+      isDemo: false,
+      createdAt: new Date().toISOString()
     };
 
     loginWithGoogleProfile(finalProfile);
@@ -339,7 +340,8 @@ export default function AuthView() {
         ? `https://linkedin.com/in/${socialInput.toLowerCase().replace(/\s+/g, "-")}`
         : `https://linkedin.com/in/${socialName.toLowerCase().replace(/\s+/g, "-")}`,
       email: emailVal,
-      isDemo: false
+      isDemo: false,
+      createdAt: new Date().toISOString()
     };
 
     loginWithGoogleProfile(finalProfile);

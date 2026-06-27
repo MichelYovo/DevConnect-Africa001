@@ -11,6 +11,7 @@ export interface Profile {
   email: string;
   isDemo?: boolean;
   isAdmin?: boolean;
+  createdAt?: string;
 }
 
 export interface Project {
@@ -40,6 +41,19 @@ export interface Event {
   organizer: string;
   organizerId: string;
   attendees: string[]; // List of user IDs attending
+}
+
+export interface Activity {
+  id: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  type: "join" | "project" | "event_register" | "profile_update";
+  messageFr: string;
+  messageEn: string;
+  createdAt: string;
+  targetId?: string;
+  targetTitle?: string;
 }
 
 export type Language = "FR" | "EN";

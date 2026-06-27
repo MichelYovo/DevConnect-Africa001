@@ -1,7 +1,17 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { Profile, Project, Event, Language, Theme, ViewType } from "../types";
+import { Profile, Project, Event, Activity, Language, Theme, ViewType } from "../types";
 import { DEMO_PROFILES, DEMO_PROJECTS, DEMO_EVENTS } from "../data";
 import { db, handleFirestoreError, OperationType } from "../firebase";
+import { 
+  syncProfileToSupabase, 
+  syncProjectToSupabase, 
+  syncEventToSupabase, 
+  deleteProfileFromSupabase, 
+  deleteProjectFromSupabase, 
+  deleteEventFromSupabase,
+  toUuid,
+  getSupabase
+} from "../supabase";
 import { 
   collection, 
   onSnapshot, 
@@ -18,6 +28,7 @@ interface AppContextProps {
   profiles: Profile[];
   projects: Project[];
   events: Event[];
+  activities: Activity[];
   language: Language;
   theme: Theme;
   currentView: ViewType;
@@ -52,6 +63,9 @@ interface AppContextProps {
   createEvent: (event: Omit<Event, "id" | "organizerId" | "organizer" | "attendees">) => Promise<void>;
   toggleAttendEvent: (id: string) => Promise<void>;
   deleteEvent: (id: string) => Promise<void>;
+
+  // Activities (Actualités)
+  addActivity: (activity: Omit<Activity, "id" | "createdAt">) => Promise<void>;
   
   // Profiles Management
   addProfile: (profile: Profile) => Promise<void>;
@@ -93,6 +107,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const saved = localStorage.getItem("dc_events");
     return saved ? JSON.parse(saved) : DEMO_EVENTS;
   });
+
+  const [activities, setActivities] = useState<Activity[]>([]);
 
   const [language, setLanguageState] = useState<Language>(() => {
     const saved = localStorage.getItem("dc_language");
@@ -139,14 +155,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       console.log("Seeding database...");
       const batch = writeBatch(db);
       
-      DEMO_PROFILES.forEach((profile) => {
+      DEMO_PROFILES.forEach((profile, index) => {
         const isAdmin = profile.email.toLowerCase() === "michelame.yovo@gmail.com";
         const password = isAdmin ? "DevConnectAdmin2026" : "devconnect123";
         const docRef = doc(db, "profiles", profile.id);
+        const demoDate = new Date(Date.now() - 3600000 * 24 * (30 + index)).toISOString();
         batch.set(docRef, {
           ...profile,
           isAdmin,
-          password
+          password,
+          createdAt: profile.createdAt || demoDate
         });
       });
       
@@ -158,6 +176,48 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       DEMO_EVENTS.forEach((evt) => {
         const docRef = doc(db, "events", evt.id);
         batch.set(docRef, evt);
+      });
+
+      const demoActivities = [
+        {
+          id: "act-demo-1",
+          userId: "user-abla",
+          userName: "Abla Lawson",
+          userAvatar: "",
+          type: "join",
+          messageFr: "Abla Lawson a rejoint la communauté DevConnect Africa !",
+          messageEn: "Abla Lawson joined the DevConnect Africa community!",
+          createdAt: new Date(Date.now() - 3600000 * 2).toISOString()
+        },
+        {
+          id: "act-demo-2",
+          userId: "user-koffi",
+          userName: "Koffi Mensah",
+          userAvatar: "",
+          type: "project",
+          messageFr: "Koffi Mensah a partagé un nouveau projet : 'EcoEats Lomé'.",
+          messageEn: "Koffi Mensah shared a new project: 'EcoEats Lomé'.",
+          createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
+          targetId: "proj-1",
+          targetTitle: "EcoEats Lomé"
+        },
+        {
+          id: "act-demo-3",
+          userId: "user-fatoumata",
+          userName: "Fatoumata Diop",
+          userAvatar: "",
+          type: "event_register",
+          messageFr: "Fatoumata Diop s'est inscrite à la conférence : 'Togo Tech Summit 2026'.",
+          messageEn: "Fatoumata Diop registered for the conference: 'Togo Tech Summit 2026'.",
+          createdAt: new Date(Date.now() - 3600000 * 12).toISOString(),
+          targetId: "evt-1",
+          targetTitle: "Togo Tech Summit 2026"
+        }
+      ];
+
+      demoActivities.forEach((act) => {
+        const docRef = doc(db, "activities", act.id);
+        batch.set(docRef, act);
       });
 
       await batch.commit();
@@ -180,6 +240,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (list.length === 0) {
         seedDatabase();
       } else {
+        // Sort profiles:
+        // 1. Non-demo profiles (real users) first
+        // 2. Sort by creation date (createdAt) descending
+        list.sort((a, b) => {
+          const aIsDemo = a.isDemo || a.email.toLowerCase().includes("demo") || a.id.startsWith("demo-");
+          const bIsDemo = b.isDemo || b.email.toLowerCase().includes("demo") || b.id.startsWith("demo-");
+          
+          if (aIsDemo && !bIsDemo) return 1;
+          if (!aIsDemo && bIsDemo) return -1;
+          
+          const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          
+          if (aTime !== bTime) {
+            return bTime - aTime;
+          }
+          
+          return b.id.localeCompare(a.id);
+        });
+
         setProfiles(list);
         localStorage.setItem("dc_profiles", JSON.stringify(list));
         
@@ -227,10 +307,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       handleFirestoreError(error, OperationType.GET, "events");
     });
 
+    // 4. Subscribe to activities collection
+    const unsubscribeActivities = onSnapshot(collection(db, "activities"), (snapshot) => {
+      const list: Activity[] = [];
+      snapshot.forEach((docSnap) => {
+        list.push({ id: docSnap.id, ...docSnap.data() } as Activity);
+      });
+      
+      // Sort activities by creation date descending
+      list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
+      setActivities(list);
+    }, (error) => {
+      console.warn("Activities subscription error:", error);
+    });
+
     return () => {
       unsubscribeProfiles();
       unsubscribeProjects();
       unsubscribeEvents();
+      unsubscribeActivities();
     };
   }, [currentUser?.id]);
 
@@ -333,13 +429,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       github: "https://github.com",
       linkedin: "https://linkedin.com",
       email: trimmedEmail,
-      isAdmin: isAdminEmail
+      isAdmin: isAdminEmail,
+      createdAt: new Date().toISOString()
     };
 
     try {
       await setDoc(doc(db, "profiles", newUserProfile.id), {
         ...newUserProfile,
         password: isAdminEmail ? "DevConnectAdmin2026" : (enteredPassword || "devconnect123")
+      });
+      
+      // Dual-sync to Supabase
+      await syncProfileToSupabase(newUserProfile);
+
+      // Create an activity feed item
+      await addActivity({
+        userId: newUserProfile.id,
+        userName: newUserProfile.name,
+        userAvatar: newUserProfile.avatar,
+        type: "join",
+        messageFr: `${newUserProfile.name} a rejoint la communauté DevConnect Africa !`,
+        messageEn: `${newUserProfile.name} joined the DevConnect Africa community!`
       });
       
       setCurrentUser(newUserProfile);
@@ -384,13 +494,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       github: "",
       linkedin: "",
       email: trimmedEmail,
-      isAdmin: isAdminEmail
+      isAdmin: isAdminEmail,
+      createdAt: new Date().toISOString()
     };
 
     try {
       await setDoc(doc(db, "profiles", newUser.id), {
         ...newUser,
         password: password || (isAdminEmail ? "DevConnectAdmin2026" : "devconnect123")
+      });
+
+      // Dual-sync to Supabase
+      await syncProfileToSupabase(newUser);
+
+      // Create an activity feed item
+      await addActivity({
+        userId: newUser.id,
+        userName: newUser.name,
+        userAvatar: newUser.avatar,
+        type: "join",
+        messageFr: `${newUser.name} a rejoint la communauté DevConnect Africa !`,
+        messageEn: `${newUser.name} joined the DevConnect Africa community!`
       });
 
       setCurrentUser(newUser);
@@ -411,7 +535,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const loginWithGoogleProfile = async (profile: Profile) => {
     const trimmedEmail = profile.email.toLowerCase();
     const existing = profiles.find(p => p.email.toLowerCase() === trimmedEmail);
-    const finalProfile = existing ? { ...existing } : profile;
+    const finalProfile = existing 
+      ? { ...existing, createdAt: existing.createdAt || profile.createdAt || new Date().toISOString() } 
+      : { ...profile, createdAt: profile.createdAt || new Date().toISOString() };
     
     if (finalProfile.email.toLowerCase() === "michelame.yovo@gmail.com") {
       finalProfile.isAdmin = true;
@@ -422,6 +548,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         ...finalProfile,
         password: finalProfile.isAdmin ? "DevConnectAdmin2026" : "google-oauth"
       }, { merge: true });
+
+      // Dual-sync to Supabase
+      await syncProfileToSupabase(finalProfile);
+
+      // Create an activity feed item if they didn't exist before
+      if (!existing) {
+        await addActivity({
+          userId: finalProfile.id,
+          userName: finalProfile.name,
+          userAvatar: finalProfile.avatar,
+          type: "join",
+          messageFr: `${finalProfile.name} a rejoint la communauté DevConnect Africa !`,
+          messageEn: `${finalProfile.name} joined the DevConnect Africa community!`
+        });
+      }
 
       setCurrentUser(finalProfile);
       showToast(
@@ -450,6 +591,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     
     try {
       await setDoc(doc(db, "profiles", currentUser.id), updatedProfile, { merge: true });
+
+      // Dual-sync to Supabase
+      await syncProfileToSupabase(updatedProfile);
+
+      // Create an activity feed item
+      await addActivity({
+        userId: currentUser.id,
+        userName: updatedProfile.name,
+        userAvatar: updatedProfile.avatar,
+        type: "profile_update",
+        messageFr: `${updatedProfile.name} a mis à jour son profil de développeur !`,
+        messageEn: `${updatedProfile.name} updated their developer profile!`
+      });
+
       setCurrentUser(updatedProfile);
 
       // Propagate changes to user's projects in real-time
@@ -459,6 +614,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           authorName: updatedProfile.name,
           authorAvatar: updatedProfile.avatar
         });
+
+        // Propagate to Supabase projects as well
+        const freshProject = projects.find(item => item.id === p.id);
+        if (freshProject) {
+          await syncProjectToSupabase({
+            ...freshProject,
+            authorName: updatedProfile.name,
+            authorAvatar: updatedProfile.avatar
+          });
+        }
       }
 
       showToast(language === "FR" ? "Profil enregistré !" : "Profile saved successfully!", "success");
@@ -486,6 +651,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     try {
       await setDoc(doc(db, "projects", projectId), newProject);
+
+      // Dual-sync to Supabase
+      await syncProjectToSupabase(newProject);
+
+      // Create an activity feed item
+      await addActivity({
+        userId: currentUser.id,
+        userName: currentUser.name,
+        userAvatar: currentUser.avatar,
+        type: "project",
+        messageFr: `${currentUser.name} a publié un nouveau projet : "${newProject.title}" !`,
+        messageEn: `${currentUser.name} published a new project: "${newProject.title}"!`,
+        targetId: newProject.id,
+        targetTitle: newProject.title
+      });
+
       showToast(language === "FR" ? "Projet partagé avec succès !" : "Project published successfully!", "success");
     } catch (err) {
       console.error("Error creating project in Firestore:", err);
@@ -496,6 +677,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const updateProject = async (id: string, updated: Partial<Project>) => {
     try {
       await updateDoc(doc(db, "projects", id), updated);
+
+      // Dual-sync to Supabase
+      const freshProject = projects.find(p => p.id === id);
+      if (freshProject) {
+        await syncProjectToSupabase({ ...freshProject, ...updated });
+      }
+
       showToast(language === "FR" ? "Projet modifié avec succès !" : "Project updated successfully!", "success");
     } catch (err) {
       console.error("Error updating project in Firestore:", err);
@@ -506,6 +694,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const deleteProject = async (id: string) => {
     try {
       await deleteDoc(doc(db, "projects", id));
+
+      // Dual-sync to Supabase
+      await deleteProjectFromSupabase(id);
+
       showToast(language === "FR" ? "Projet supprimé !" : "Project deleted!", "info");
     } catch (err) {
       console.error("Error deleting project from Firestore:", err);
@@ -535,6 +727,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         likedBy: newLikedBy,
         likes: newLikedBy.length
       });
+
+      // Dual-sync to Supabase
+      if (proj) {
+        await syncProjectToSupabase({
+          ...proj,
+          likedBy: newLikedBy,
+          likes: newLikedBy.length
+        });
+      }
     } catch (err) {
       console.error("Error liking project in Firestore:", err);
       handleFirestoreError(err, OperationType.UPDATE, `projects/${id}`);
@@ -555,6 +756,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     try {
       await setDoc(doc(db, "events", eventId), newEvent);
+
+      // Dual-sync to Supabase
+      await syncEventToSupabase(newEvent);
+
       showToast(language === "FR" ? "Événement programmé avec succès !" : "Event scheduled successfully!", "success");
     } catch (err) {
       console.error("Error creating event in Firestore:", err);
@@ -585,6 +790,28 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       await updateDoc(doc(db, "events", id), {
         attendees: newAttendees
       });
+
+      // Dual-sync to Supabase
+      if (evt) {
+        await syncEventToSupabase({
+          ...evt,
+          attendees: newAttendees
+        });
+      }
+
+      // Add dynamic activity log when a user joins/registers for an event
+      if (!attending && currentUser) {
+        await addActivity({
+          userId: currentUser.id,
+          userName: currentUser.name,
+          userAvatar: currentUser.avatar,
+          type: "event_register",
+          messageFr: `${currentUser.name} s'est inscrit à l'événement : "${evt.title}" !`,
+          messageEn: `${currentUser.name} registered for the event: "${evt.title}"!`,
+          targetId: evt.id,
+          targetTitle: evt.title
+        });
+      }
     } catch (err) {
       console.error("Error updating event attendees in Firestore:", err);
       handleFirestoreError(err, OperationType.UPDATE, `events/${id}`);
@@ -594,6 +821,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const deleteEvent = async (id: string) => {
     try {
       await deleteDoc(doc(db, "events", id));
+
+      // Dual-sync to Supabase
+      await deleteEventFromSupabase(id);
+
       showToast(language === "FR" ? "Événement supprimé !" : "Event deleted!", "info");
     } catch (err) {
       console.error("Error deleting event from Firestore:", err);
@@ -601,12 +832,48 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const addActivity = async (activityData: Omit<Activity, "id" | "createdAt">) => {
+    const activityId = `act-${Date.now()}`;
+    const newActivity: Activity = {
+      ...activityData,
+      id: activityId,
+      createdAt: new Date().toISOString()
+    };
+    try {
+      await setDoc(doc(db, "activities", activityId), newActivity);
+      
+      // Real Supabase Sync!
+      const supabase = getSupabase();
+      if (supabase) {
+        await supabase.from("activities").upsert({
+          id: toUuid(newActivity.id),
+          user_id: toUuid(newActivity.userId),
+          user_name: newActivity.userName,
+          user_avatar: newActivity.userAvatar || "",
+          type: newActivity.type,
+          message_fr: newActivity.messageFr,
+          message_en: newActivity.messageEn,
+          created_at: newActivity.createdAt,
+          target_id: newActivity.targetId ? toUuid(newActivity.targetId) : null,
+          target_title: newActivity.targetTitle || ""
+        }, { onConflict: "id" });
+      }
+    } catch (err) {
+      console.error("Error adding activity to Firestore/Supabase:", err);
+    }
+  };
+
   const addProfile = async (profile: Profile) => {
     try {
       await setDoc(doc(db, "profiles", profile.id), {
         ...profile,
-        password: profile.isAdmin ? "DevConnectAdmin2026" : "devconnect123"
+        password: profile.isAdmin ? "DevConnectAdmin2026" : "devconnect123",
+        createdAt: profile.createdAt || new Date().toISOString()
       });
+
+      // Dual-sync to Supabase
+      await syncProfileToSupabase(profile);
+
       showToast(language === "FR" ? "Profil de développeur ajouté !" : "Developer profile added!", "success");
     } catch (err) {
       console.error("Error adding profile to Firestore:", err);
@@ -617,6 +884,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const deleteProfile = async (id: string) => {
     try {
       await deleteDoc(doc(db, "profiles", id));
+
+      // Dual-sync to Supabase
+      await deleteProfileFromSupabase(id);
+
       showToast(language === "FR" ? "Profil supprimé de la base !" : "Profile deleted from database!", "info");
     } catch (err) {
       console.error("Error deleting profile from Firestore:", err);
@@ -658,6 +929,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         profiles,
         projects,
         events,
+        activities,
         language,
         theme,
         currentView,
@@ -682,6 +954,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         createEvent,
         toggleAttendEvent,
         deleteEvent,
+        addActivity,
         addProfile,
         deleteProfile,
         toggleAdminStatus,
