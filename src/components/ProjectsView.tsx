@@ -588,7 +588,7 @@ export default function ProjectsView() {
                 </label>
                 <textarea
                   required
-                  rows={4}
+                  rows={2}
                   placeholder="Décrivez votre application, sa genèse, et son impact pour la communauté tech africaine..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -721,7 +721,7 @@ export default function ProjectsView() {
                 </label>
                 <textarea
                   required
-                  rows={4}
+                  rows={2}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="w-full px-4 py-2.5 rounded-xl border border-zinc-200/60 dark:border-white/10 bg-zinc-50/50 dark:bg-zinc-900/50 text-sm focus:border-green-500 outline-none text-zinc-900 dark:text-white"

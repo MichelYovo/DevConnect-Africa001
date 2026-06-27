@@ -7,8 +7,8 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
-// API Route for Gemini Oracle AI
-app.post("/api/oracle/generate", async (req, res) => {
+// API Route for Gemini Oracle AI - supports both paths for robust Vercel serverless routing
+app.post(["/api/oracle/generate", "/oracle/generate"], async (req, res) => {
   try {
     const { title, description, techStack } = req.body;
     if (!title || !description) {
