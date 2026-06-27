@@ -1,59 +1,14 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Global safety net
-    match /{document=**} {
-      allow read, write: if false;
-    }
-
-    // ID validation to prevent poisoning with huge or malicious keys
-    function isValidId(id) {
-      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
-    }
-
-    // Profile schema validation
-    function isValidProfile(profile) {
-      return profile.keys().hasAll(['id', 'name', 'email']) &&
-             profile.id is string && profile.id.size() <= 128 &&
-             profile.name is string && profile.name.size() <= 100 &&
-             profile.email is string && profile.email.size() <= 100;
-    }
-
-    // Project schema validation
-    function isValidProject(project) {
-      return project.keys().hasAll(['id', 'title', 'authorId', 'createdAt']) &&
-             project.id is string && project.id.size() <= 128 &&
-             project.title is string && project.title.size() <= 200 &&
-             project.authorId is string && project.authorId.size() <= 128 &&
-             project.createdAt is string && project.createdAt.size() <= 100;
-    }
-
-    // Event schema validation
-    function isValidEvent(event) {
-      return event.keys().hasAll(['id', 'title', 'organizerId', 'date']) &&
-             event.id is string && event.id.size() <= 128 &&
-             event.title is string && event.title.size() <= 200 &&
-             event.organizerId is string && event.organizerId.size() <= 128 &&
-             event.date is string && event.date.size() <= 100;
-    }
-
     match /profiles/{profileId} {
-      allow read: if true;
-      allow create, update: if isValidId(profileId) && isValidProfile(request.resource.data);
-      allow delete: if isValidId(profileId);
+      allow read, write: if true;
     }
-
     match /projects/{projectId} {
-      allow read: if true;
-      allow create, update: if isValidId(projectId) && isValidProject(request.resource.data);
-      allow delete: if isValidId(projectId);
+      allow read, write: if true;
     }
-
     match /events/{eventId} {
-      allow read: if true;
-      allow create, update: if isValidId(eventId) && isValidEvent(request.resource.data);
-      allow delete: if isValidId(eventId);
+      allow read, write: if true;
     }
   }
 }
