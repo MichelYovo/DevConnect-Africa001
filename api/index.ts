@@ -41,7 +41,14 @@ Stack actuelle (si spécifiée) : ${techStack ? techStack.join(", ") : "Aucune"}
 
 Veuillez structurer votre réponse au format JSON avec EXACTEMENT ces clés :
 1. "techStackIdeal" : Un texte détaillé en Markdown (en français) décrivant la stack technique idéale pour ce projet en Afrique. Intégrez spécifiquement des solutions de paiement locales adaptées comme FedaPay, PayGate, Semoa, Flooz, T-Money, Wave ou Orange Money selon les cas d'utilisation, expliquez les raisons des choix d'architecture (ex: Next.js, hosting sans serveur, DB performante) et proposez une feuille de route d'implémentation étape par étape.
-2. "pitchDeck" : Un pitch deck professionnel et captivant de 5 slides rédigé en Markdown (en français) utilisant des séparateurs de slides clairs (comme des balises <div class="slide"> ou des sections) comprenant : Problème, Solution, Taille du marché en Afrique, Modèle économique (Business Model), et Appel à l'action / Prochaines étapes.
+2. "pitchDeck" : Un pitch deck professionnel et captivant de 5 slides rédigé en Markdown (en français), en utilisant les séparateurs "---" entre chaque slide.
+   CRITICAL : Chaque slide ou section doit être rédigée exclusivement sous la forme de paragraphes de texte fluide, rédigé de manière professionnelle et inspirante (strictement aucun tiret, aucune liste à puces, aucun astérisque sous forme de liste, et aucun point de liste). Tout le contenu de chaque slide doit être intégré dans des phrases et des paragraphes rédigés.
+   Le pitch deck doit comprendre :
+   - Slide 1 : Le Problème (expliqué en paragraphe)
+   - Slide 2 : La Solution (expliquée en paragraphe)
+   - Slide 3 : La Taille du marché en Afrique (expliquée sous forme de paragraphe fluide chiffré)
+   - Slide 4 : Le Modèle économique / Business Model (expliqué en paragraphe fluide)
+   - Slide 5 : L'Appel à l'action / Prochaines étapes (expliqué en paragraphe fluide)
 3. "suggestedTags" : Un tableau de chaînes de caractères (tags) suggérant les technologies idéales (ex: ["Next.js", "FedaPay", "Supabase", "React"]).
 
 Générez uniquement l'objet JSON brut valide, sans inclure de balises de code Markdown de type \`\`\`json au début ou à la fin.

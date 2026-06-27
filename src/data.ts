@@ -126,28 +126,23 @@ export const DEMO_PROJECTS: Project[] = [
 4. **Hébergement** : Déploiement automatisé sur **Cloud Run** ou **Vercel** pour assurer une montée en charge progressive et économique.
 5. **Alerte SMS** : Intégration de l'API **Semoa** pour notifier instantanément les agriculteurs par SMS de chaque vente effectuée, même sans connexion Internet.`,
     pitchDeck: `# Slide 1 : Le Problème ⚠️
-Les petits agriculteurs perdent jusqu'à 40% de leurs récoltes faute de débouchés fiables, tandis que les intermédiaires spéculatifs rognent leurs marges bénéficiaires.
+Les petits agriculteurs perdent jusqu'à 40% de leurs récoltes faute de débouchés fiables, tandis que les intermédiaires spéculatifs rognent leurs marges bénéficiaires et limitent le développement du secteur.
 
 ---
 # Slide 2 : La Solution 💡
-Une marketplace mobile et web simplifiée qui connecte directement et en direct les coopératives agricoles aux acheteurs urbains grossistes, sécurisée par Mobile Money.
+Une marketplace mobile et web simplifiée qui connecte directement et en direct les coopératives agricoles aux acheteurs urbains grossistes. La plateforme intègre des paiements sécurisés par Mobile Money pour lever la barrière de confiance.
 
 ---
 # Slide 3 : Le Marché Africain 🌍
-- **TAM** : $250 milliards de valeur de production agricole en Afrique subsaharienne.
-- **SAM** : Marché de gros agroalimentaire régional de $12 milliards en Afrique de l'Ouest.
-- **SOM** : Togo et pays côtiers limitrophes représentant $45 millions d'échanges à numériser.
+Le marché subsaharien de la production agricole représente une valeur globale de 250 milliards de dollars. En Afrique de l'Ouest, le marché de gros régional ciblé s'élève à 12 milliards de dollars. Nous commençons par numériser les flux du Togo et des pays côtiers limitrophes, ce qui représente un potentiel immédiat de 45 millions de dollars d'échanges.
 
 ---
 # Slide 4 : Modèle Économique 💰
-- **Commission** : 5% sur chaque transaction sécurisée par notre plateforme.
-- **SaaS Premium** : Abonnement de $8/mois pour les coopératives désirant des statistiques de prix avancées et des prévisions de vente.
+Nous générons des revenus grâce à une commission de 5% prélevée sur chaque transaction sécurisée par notre plateforme. De plus, un abonnement SaaS Premium de 8 dollars par mois est proposé aux coopératives désireuses d'accéder à des statistiques de prix avancées et des outils de prévision de vente.
 
 ---
 # Slide 5 : Appel à l'Action 🚀
-Rejoignez notre révolution verte ! Nous recherchons :
-- **50 coopératives pilotes** au Togo et au Bénin.
-- Un financement de **$150,000** en pré-amorçage pour déployer nos premiers hubs logistiques.`
+Rejoignez notre révolution verte ! Nous recherchons activement 50 coopératives pilotes situées au Togo et au Bénin pour lancer nos opérations, ainsi qu'un financement de 150 000 dollars en pré-amorçage pour déployer nos premiers hubs logistiques.`
   },
   {
     id: "proj-2",
