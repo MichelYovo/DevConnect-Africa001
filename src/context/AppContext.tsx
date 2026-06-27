@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Profile, Project, Event, Activity, Language, Theme, ViewType } from "../types";
-import { DEMO_PROFILES, DEMO_PROJECTS, DEMO_EVENTS } from "../data";
+import { DEMO_PROFILES, DEMO_PROJECTS, DEMO_EVENTS, DEMO_ACTIVITIES } from "../data";
 import { db, handleFirestoreError, OperationType } from "../firebase";
 import { 
   syncProfileToSupabase, 
@@ -72,6 +72,9 @@ interface AppContextProps {
   deleteProfile: (id: string) => Promise<void>;
   toggleAdminStatus: (id: string, isNowAdmin: boolean) => Promise<void>;
   
+  selectedProfileId: string | null;
+  setSelectedProfileId: (id: string | null) => void;
+  
   // Simulator triggers
   triggerConfetti: () => void;
   toastMessage: { text: string; type: "success" | "error" | "info" } | null;
@@ -125,6 +128,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [searchSkillQuery, setSearchSkillQuery] = useState<string>("");
   const [togoOnlyFilter, setTogoOnlyFilter] = useState<boolean>(true);
   const [toastMessage, setToastMessage] = useState<{ text: string; type: "success" | "error" | "info" } | null>(null);
+  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
 
   // Sync basic settings to localStorage
   useEffect(() => {
@@ -317,9 +321,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       // Sort activities by creation date descending
       list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       
-      setActivities(list);
+      setActivities(list.length > 0 ? list : DEMO_ACTIVITIES);
     }, (error) => {
       console.warn("Activities subscription error:", error);
+      setActivities(DEMO_ACTIVITIES);
     });
 
     return () => {
@@ -961,7 +966,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         triggerConfetti,
         toastMessage,
         showToast,
-        clearToast
+        clearToast,
+        selectedProfileId,
+        setSelectedProfileId
       }}
     >
       {children}

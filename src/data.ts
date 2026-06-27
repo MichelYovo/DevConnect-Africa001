@@ -1,4 +1,4 @@
-import { Profile, Project, Event } from "./types";
+import { Profile, Project, Event, Activity } from "./types";
 
 const avatarKoffi = "/photo/koffi_mensah.jpg";
 const avatarAbla = "/photo/abla_lawson.jpg";
@@ -240,6 +240,77 @@ export const DEMO_EVENTS: Event[] = [
     organizer: "DevConnect Africa",
     organizerId: "system",
     attendees: ["demo-2", "demo-4", "demo-5"]
+  }
+];
+
+export const DEMO_ACTIVITIES: Activity[] = [
+  {
+    id: "act-1",
+    userId: "demo-1",
+    userName: "Koffi Mensah",
+    userAvatar: avatarKoffi,
+    type: "project",
+    messageFr: "a publié un nouveau projet : AgroMarket Africa",
+    messageEn: "published a new project: AgroMarket Africa",
+    createdAt: "2026-06-25T11:20:00Z",
+    targetId: "proj-1",
+    targetTitle: "AgroMarket Africa"
+  },
+  {
+    id: "act-2",
+    userId: "demo-4",
+    userName: "Enyonam Kpogo",
+    userAvatar: avatarEnyonam,
+    type: "project",
+    messageFr: "a publié un nouveau projet : Lomé Transit Tracker",
+    messageEn: "published a new project: Lomé Transit Tracker",
+    createdAt: "2026-06-24T15:45:00Z",
+    targetId: "proj-2",
+    targetTitle: "Lomé Transit Tracker"
+  },
+  {
+    id: "act-3",
+    userId: "demo-3",
+    userName: "Fatoumata Diop",
+    userAvatar: avatarFatoumata,
+    type: "project",
+    messageFr: "a publié un nouveau projet : AfriVoice Wolof/Ewe NLP",
+    messageEn: "published a new project: AfriVoice Wolof/Ewe NLP",
+    createdAt: "2026-06-23T09:12:00Z",
+    targetId: "proj-3",
+    targetTitle: "AfriVoice Wolof/Ewe NLP"
+  },
+  {
+    id: "act-4",
+    userId: "demo-2",
+    userName: "Abla Lawson",
+    userAvatar: avatarAbla,
+    type: "join",
+    messageFr: "a rejoint la communauté DevConnect Africa depuis Kpalimé !",
+    messageEn: "joined the DevConnect Africa community from Kpalimé!",
+    createdAt: "2026-06-22T14:30:00Z"
+  },
+  {
+    id: "act-5",
+    userId: "demo-5",
+    userName: "Chinedu Okafor",
+    userAvatar: avatarChinedu,
+    type: "event_register",
+    messageFr: "s'est inscrit(e) à l'événement : Africa Tech Summit Nairobi 2026",
+    messageEn: "registered for the event: Africa Tech Summit Nairobi 2026",
+    createdAt: "2026-06-21T18:05:00Z",
+    targetId: "evt-2",
+    targetTitle: "Africa Tech Summit Nairobi 2026"
+  },
+  {
+    id: "act-6",
+    userId: "demo-6",
+    userName: "Mwangi Mwangi",
+    userAvatar: avatarMwangi,
+    type: "join",
+    messageFr: "a rejoint la communauté DevConnect Africa depuis Nairobi !",
+    messageEn: "joined the DevConnect Africa community from Nairobi!",
+    createdAt: "2026-06-20T10:15:00Z"
   }
 ];
 

@@ -11,6 +11,7 @@ import SettingsView from "./components/SettingsView";
 import SupabaseSqlView from "./components/SupabaseSqlView";
 import AdminView from "./components/AdminView";
 import BackgroundGlow from "./components/BackgroundGlow";
+import DeveloperProfileModal from "./components/DeveloperProfileModal";
 import { 
   X, 
   MapPin, 
@@ -66,6 +67,9 @@ function MainAppContent() {
           {renderView()}
         </main>
       </div>
+
+      {/* Profile Details Modal */}
+      <DeveloperProfileModal />
 
       {/* Modern, high-craft Footer */}
       <footer className="border-t border-zinc-200/60 dark:border-white/5 bg-white dark:bg-[#09090b]/40 py-12 text-xs text-zinc-500 dark:text-zinc-400">

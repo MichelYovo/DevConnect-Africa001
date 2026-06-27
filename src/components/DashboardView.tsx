@@ -37,7 +37,8 @@ export default function DashboardView() {
     toggleAttendEvent,
     toggleLikeProject,
     togoOnlyFilter,
-    setTogoOnly
+    setTogoOnly,
+    setSelectedProfileId
   } = useApp();
 
   // Search profiles state
@@ -307,19 +308,23 @@ export default function DashboardView() {
               {filteredDevs.map((dev) => (
                 <div
                   key={dev.id}
-                  className="bg-white dark:bg-[#09090b]/40 rounded-2xl border border-zinc-200/60 dark:border-white/10 p-6 flex flex-col justify-between shadow-sm hover:shadow-md hover:border-green-500/20 dark:hover:border-green-500/30 transition-all"
+                  className="bg-white dark:bg-[#09090b]/40 rounded-2xl border border-zinc-200/60 dark:border-white/10 p-6 flex flex-col justify-between shadow-sm hover:shadow-md hover:border-green-500/20 dark:hover:border-green-500/30 transition-all group"
                 >
                   <div className="space-y-4">
                     
                     {/* Header */}
-                    <div className="flex gap-4">
+                    <div 
+                      className="flex gap-4 cursor-pointer group/avatar"
+                      onClick={() => setSelectedProfileId(dev.id)}
+                    >
                       <DeveloperAvatar
                         name={dev.name}
                         avatar={dev.avatar}
-                        sizeClassName="h-12 w-12 text-sm"
+                        sizeClassName="h-12 w-12 text-sm transition-transform duration-200 group-hover/avatar:scale-105"
+                        status={dev.id === currentUser?.id || !dev.email.includes("offline")}
                       />
                       <div>
-                        <h4 className="text-sm font-bold text-zinc-900 dark:text-white">
+                        <h4 className="text-sm font-bold text-zinc-900 dark:text-white group-hover/avatar:text-green-500 dark:group-hover/avatar:text-green-400 transition-colors flex items-center gap-1.5">
                           {dev.name}
                         </h4>
                         <p className="text-xs text-green-600 dark:text-green-400 font-bold">
@@ -333,7 +338,10 @@ export default function DashboardView() {
                     </div>
 
                     {/* Bio */}
-                    <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed line-clamp-3">
+                    <p 
+                      className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed line-clamp-3 cursor-pointer"
+                      onClick={() => setSelectedProfileId(dev.id)}
+                    >
                       {dev.bio}
                     </p>
 
@@ -352,9 +360,13 @@ export default function DashboardView() {
                   </div>
 
                   <div className="border-t border-zinc-100 dark:border-white/5 mt-5 pt-3.5 flex justify-between items-center">
-                    <span className="text-[10px] font-mono text-zinc-400">
-                      {dev.email}
-                    </span>
+                    <button
+                      onClick={() => setSelectedProfileId(dev.id)}
+                      className="text-xs font-bold text-green-600 dark:text-green-400 hover:text-green-500 flex items-center gap-1 cursor-pointer transition-all"
+                    >
+                      <span>Voir le profil</span>
+                      <span className="transition-transform group-hover:translate-x-1">→</span>
+                    </button>
                     
                     <div className="flex gap-2">
                       {dev.github && (

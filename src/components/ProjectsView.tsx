@@ -28,7 +28,8 @@ export default function ProjectsView() {
     deleteProject, 
     toggleLikeProject, 
     language,
-    profiles
+    profiles,
+    setSelectedProfileId
   } = useApp();
 
   // Search and filter states
@@ -319,14 +320,17 @@ export default function ProjectsView() {
                   
                   {/* Author metadata block */}
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
+                    <div 
+                      className="flex items-center gap-2 cursor-pointer group/author"
+                      onClick={() => setSelectedProfileId(proj.authorId)}
+                    >
                       <DeveloperAvatar
                         name={proj.authorName}
                         avatar={proj.authorAvatar}
-                        sizeClassName="h-6 w-6 text-[9px]"
+                        sizeClassName="h-6 w-6 text-[9px] transition-transform duration-200 group-hover/author:scale-110"
                       />
                       <div className="leading-none">
-                        <div className="text-[10px] font-bold text-zinc-800 dark:text-zinc-200">{proj.authorName}</div>
+                        <div className="text-[10px] font-bold text-zinc-800 dark:text-zinc-200 group-hover/author:text-green-500 dark:group-hover/author:text-green-400 transition-colors">{proj.authorName}</div>
                         <div className="text-[9px] text-zinc-400 flex items-center gap-0.5">
                           <MapPin className="h-2 w-2 text-yellow-500" />
                           {authorCity}

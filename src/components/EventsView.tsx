@@ -24,7 +24,8 @@ export default function EventsView() {
     createEvent, 
     toggleAttendEvent, 
     language,
-    profiles
+    profiles,
+    setSelectedProfileId
   } = useApp();
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -193,7 +194,12 @@ export default function EventsView() {
                       <div className="flex items-center gap-1">
                         <div className="flex -space-x-2 overflow-hidden">
                           {eventAttendeesProfiles.slice(0, 6).map((ap) => (
-                            <div key={ap.id} className="inline-block ring-2 ring-white dark:ring-zinc-950 rounded-full" title={ap.name}>
+                            <div 
+                              key={ap.id} 
+                              className="inline-block ring-2 ring-white dark:ring-zinc-950 rounded-full cursor-pointer hover:scale-115 hover:z-10 transition-transform duration-150" 
+                              title={ap.name}
+                              onClick={() => setSelectedProfileId(ap.id)}
+                            >
                               <DeveloperAvatar
                                 name={ap.name}
                                 avatar={ap.avatar}
