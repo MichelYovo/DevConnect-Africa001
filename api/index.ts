@@ -15,7 +15,7 @@ app.post(["/api/oracle/generate", "/oracle/generate"], async (req, res) => {
       return res.status(400).json({ error: "Le titre et la description sont requis." });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY || "AIzaSyCh_0VbGSvggY0OXb9MfQvVoyuH3UtORic";
     if (!apiKey) {
       return res.status(500).json({ 
         error: "Clé API Gemini manquante. Veuillez configurer GEMINI_API_KEY dans vos secrets de l'application." 
