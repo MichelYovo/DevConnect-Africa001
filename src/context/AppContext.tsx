@@ -46,7 +46,17 @@ interface AppContextProps {
   
   // Auth
   login: (email: string, password?: string) => Promise<{ success: boolean; error?: string }>;
-  registerUser: (name: string, email: string, password?: string, location?: string) => Promise<{ success: boolean; error?: string }>;
+  registerUser: (
+    name: string, 
+    email: string, 
+    password?: string, 
+    location?: string,
+    title?: string,
+    bio?: string,
+    skills?: string[],
+    github?: string,
+    linkedin?: string
+  ) => Promise<{ success: boolean; error?: string }>;
   loginWithGoogleProfile: (profile: Profile) => Promise<void>;
   logout: () => void;
   
@@ -74,6 +84,14 @@ interface AppContextProps {
   
   selectedProfileId: string | null;
   setSelectedProfileId: (id: string | null) => void;
+  
+  // Recruitment Shortlist/Cart
+  shortlistedIds: string[];
+  addToShortlist: (id: string) => void;
+  removeFromShortlist: (id: string) => void;
+  clearShortlist: () => void;
+  isCartOpen: boolean;
+  setIsCartOpen: (open: boolean) => void;
   
   // Simulator triggers
   triggerConfetti: () => void;
@@ -129,6 +147,49 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [togoOnlyFilter, setTogoOnlyFilter] = useState<boolean>(true);
   const [toastMessage, setToastMessage] = useState<{ text: string; type: "success" | "error" | "info" } | null>(null);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
+
+  // Recruitment Shortlist/Cart
+  const [shortlistedIds, setShortlistedIds] = useState<string[]>(() => {
+    const saved = localStorage.getItem("dc_shortlisted_ids");
+    try {
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [isCartOpen, setIsCartOpen] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem("dc_shortlisted_ids", JSON.stringify(shortlistedIds));
+  }, [shortlistedIds]);
+
+  const addToShortlist = (id: string) => {
+    if (!shortlistedIds.includes(id)) {
+      setShortlistedIds([...shortlistedIds, id]);
+      const name = profiles.find(p => p.id === id)?.name || "Développeur";
+      showToast(
+        language === "FR" 
+          ? `${name} ajouté à la sélection !` 
+          : `${name} added to shortlist!`, 
+        "success"
+      );
+    }
+  };
+
+  const removeFromShortlist = (id: string) => {
+    setShortlistedIds(shortlistedIds.filter(x => x !== id));
+    const name = profiles.find(p => p.id === id)?.name || "Développeur";
+    showToast(
+      language === "FR" 
+        ? `${name} retiré de la sélection.` 
+        : `${name} removed from shortlist.`, 
+      "info"
+    );
+  };
+
+  const clearShortlist = () => {
+    setShortlistedIds([]);
+  };
 
   // Sync basic settings to localStorage
   useEffect(() => {
@@ -472,7 +533,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const registerUser = async (name: string, email: string, password?: string, location?: string) => {
+  const registerUser = async (
+    name: string, 
+    email: string, 
+    password?: string, 
+    location?: string,
+    title?: string,
+    bio?: string,
+    skills?: string[],
+    github?: string,
+    linkedin?: string
+  ) => {
     if (!name || !email) {
       return { success: false, error: "Please provide both name and email" };
     }
@@ -490,14 +561,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       id: isAdminEmail ? "admin-michel" : `user-${Date.now()}`,
       name: name.trim(),
       avatar: "",
-      title: isAdminEmail ? "Administrateur Chef de Projet" : "Junior Web Developer",
-      bio: isAdminEmail 
+      title: title || (isAdminEmail ? "Administrateur Chef de Projet" : "Junior Web Developer"),
+      bio: bio || (isAdminEmail 
         ? "Administrateur principal du hub de l'écosystème tech africain." 
-        : `Développeur passionné basé à ${defaultLoc}, désireux d'élargir mes compétences et de collaborer sur de superbes projets à travers l'Afrique.`,
-      skills: isAdminEmail ? ["Gouvernance", "React", "Firebase"] : ["HTML", "CSS", "JavaScript"],
+        : `Développeur passionné basé à ${defaultLoc}, désireux d'élargir mes compétences et de collaborer sur de superbes projets à travers l'Afrique.`),
+      skills: skills || (isAdminEmail ? ["Gouvernance", "React", "Firebase"] : ["HTML", "CSS", "JavaScript"]),
       location: defaultLoc,
-      github: "",
-      linkedin: "",
+      github: github || "",
+      linkedin: linkedin || "",
       email: trimmedEmail,
       isAdmin: isAdminEmail,
       createdAt: new Date().toISOString()
@@ -924,7 +995,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const triggerConfetti = () => {
-    showToast(language === "FR" ? "🎉 Succès communautaire !" : "🎉 Community Success!", "success");
+    showToast(language === "FR" ? "Succès communautaire !" : "Community Success!", "success");
   };
 
   return (
@@ -968,7 +1039,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         showToast,
         clearToast,
         selectedProfileId,
-        setSelectedProfileId
+        setSelectedProfileId,
+        shortlistedIds,
+        addToShortlist,
+        removeFromShortlist,
+        clearShortlist,
+        isCartOpen,
+        setIsCartOpen
       }}
     >
       {children}

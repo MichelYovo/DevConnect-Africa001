@@ -126,8 +126,9 @@ export default function SupabaseSqlView() {
 
           </div>
 
-          <p className="text-[11px] font-mono text-zinc-400 text-center">
-            💡 Astuce : Exécutez ce script dans la section SQL Editor de votre projet Supabase pour initialiser instantanément votre MVP en production.
+          <p className="text-[11px] font-mono text-zinc-400 text-center flex items-center justify-center gap-1.5">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-500"></span>
+            <span>Astuce : Exécutez ce script dans la section SQL Editor de votre projet Supabase pour initialiser instantanément votre MVP en production.</span>
           </p>
 
         </div>

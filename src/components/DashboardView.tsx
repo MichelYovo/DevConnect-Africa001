@@ -18,7 +18,8 @@ import {
   Linkedin,
   Sparkles,
   Info,
-  CheckCircle2
+  CheckCircle2,
+  Globe
 } from "lucide-react";
 
 export default function DashboardView() {
@@ -38,7 +39,10 @@ export default function DashboardView() {
     toggleLikeProject,
     togoOnlyFilter,
     setTogoOnly,
-    setSelectedProfileId
+    setSelectedProfileId,
+    shortlistedIds,
+    addToShortlist,
+    removeFromShortlist
   } = useApp();
 
   // Search profiles state
@@ -86,13 +90,14 @@ export default function DashboardView() {
       {/* Welcome Banner */}
       <div className="bg-white dark:bg-[#09090b]/40 text-zinc-900 dark:text-white rounded-3xl p-6 sm:p-8 border border-zinc-200/60 dark:border-white/10 relative overflow-hidden shadow-lg">
         {/* Abstract background vector accent */}
-        <div className="absolute top-0 right-0 h-48 w-48 bg-green-500/10 blur-3xl rounded-full"></div>
-        <div className="absolute bottom-0 right-1/4 h-32 w-32 bg-yellow-500/5 blur-3xl rounded-full"></div>
+        <div className="absolute top-0 right-0 h-48 w-48 bg-indigo-500/5 blur-3xl rounded-full"></div>
+        <div className="absolute bottom-0 right-1/4 h-32 w-32 bg-blue-500/5 blur-3xl rounded-full"></div>
 
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-yellow-500/10 text-yellow-500 text-xs font-mono font-bold">
-              ⚡ LIVE PAN-AFRICAN REGISTRY
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 text-xs font-mono font-bold border border-indigo-500/10">
+              <Sparkles className="h-3 w-3 text-indigo-500 shrink-0 animate-pulse" />
+              <span>LIVE PAN-AFRICAN REGISTRY</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
               {currentUser 
@@ -117,7 +122,7 @@ export default function DashboardView() {
                 </button>
                 <button
                   onClick={() => setView("projects")}
-                  className="px-4 py-2.5 rounded-xl bg-green-500 hover:bg-green-400 text-black font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-md shadow-green-500/15"
+                  className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-md shadow-indigo-600/15"
                 >
                   <Plus className="h-4 w-4" />
                   {getTranslation(language, "createProject")}
@@ -126,7 +131,7 @@ export default function DashboardView() {
             ) : (
               <button
                 onClick={() => setView("register")}
-                className="px-5 py-3 rounded-xl bg-green-500 hover:bg-green-400 text-black font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-lg shadow-green-500/20"
+                className="px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-lg shadow-indigo-600/20"
               >
                 Rejoindre le réseau
                 <Plus className="h-4 w-4" />
@@ -150,12 +155,12 @@ export default function DashboardView() {
             {/* Pan-African Network switch */}
             <div className="flex items-center justify-between p-2.5 rounded-xl bg-zinc-50 dark:bg-[#09090b]/60 border border-zinc-150 dark:border-white/5">
               <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse"></span>
+                <Globe className="h-4 w-4 text-indigo-500 shrink-0" />
                 <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                  Réseau Afrique 🌍
+                  Réseau Afrique
                 </span>
               </div>
-              <span className="text-[10px] bg-green-500/10 text-green-700 dark:text-green-400 px-1.5 py-0.5 rounded font-mono font-bold">
+              <span className="text-[10px] bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 px-1.5 py-0.5 rounded font-mono font-bold">
                 ACTIF
               </span>
             </div>
@@ -170,7 +175,7 @@ export default function DashboardView() {
                   onClick={() => setCityFilter("all")}
                   className={`text-left px-3 py-2 rounded-xl text-xs font-semibold transition-all flex justify-between items-center ${
                     selectedCityFilter === "all"
-                      ? "bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20"
+                      ? "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20"
                       : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-[#09090b]/30"
                   }`}
                 >
@@ -185,7 +190,7 @@ export default function DashboardView() {
                       onClick={() => setCityFilter(ctry)}
                       className={`text-left px-3 py-2 rounded-xl text-xs font-semibold transition-all flex justify-between items-center ${
                         selectedCityFilter === ctry
-                          ? "bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20"
+                          ? "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20"
                           : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-[#09090b]/30"
                       }`}
                     >
@@ -255,7 +260,7 @@ export default function DashboardView() {
         </div>
 
         {/* Profiles Grid / Main Area */}
-        <div className="lg:col-span-6 space-y-6">
+        <div className="lg:col-span-9 space-y-6">
           
           {/* Search bar */}
           <div className="relative">
@@ -265,7 +270,7 @@ export default function DashboardView() {
               placeholder={getTranslation(language, "searchSkills")}
               value={localSearch}
               onChange={handleSearchChange}
-              className="w-full pl-11 pr-4 py-3 rounded-2xl border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-[#09090b]/40 text-sm focus:border-green-500 focus:bg-white outline-none text-zinc-900 dark:text-white transition-all shadow-sm"
+              className="w-full pl-11 pr-4 py-3 rounded-2xl border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-[#09090b]/40 text-sm focus:border-indigo-500 focus:bg-white outline-none text-zinc-900 dark:text-white transition-all shadow-sm"
             />
             {localSearch && (
               <button
@@ -284,7 +289,7 @@ export default function DashboardView() {
             </span>
             {selectedCityFilter !== "all" && (
               <span>
-                Filtre : <strong className="text-green-600 dark:text-green-400">{selectedCityFilter}</strong>
+                Filtre : <strong className="text-indigo-600 dark:text-indigo-400">{selectedCityFilter}</strong>
               </span>
             )}
           </div>
@@ -308,7 +313,7 @@ export default function DashboardView() {
               {filteredDevs.map((dev) => (
                 <div
                   key={dev.id}
-                  className="bg-white dark:bg-[#09090b]/40 rounded-2xl border border-zinc-200/60 dark:border-white/10 p-6 flex flex-col justify-between shadow-sm hover:shadow-md hover:border-green-500/20 dark:hover:border-green-500/30 transition-all group"
+                  className="bg-white dark:bg-[#09090b]/40 rounded-2xl border border-zinc-200/60 dark:border-white/10 p-6 flex flex-col justify-between shadow-sm hover:shadow-md hover:border-indigo-500/20 dark:hover:border-indigo-500/30 transition-all group"
                 >
                   <div className="space-y-4">
                     
@@ -324,10 +329,10 @@ export default function DashboardView() {
                         status={dev.id === currentUser?.id || !dev.email.includes("offline")}
                       />
                       <div>
-                        <h4 className="text-sm font-bold text-zinc-900 dark:text-white group-hover/avatar:text-green-500 dark:group-hover/avatar:text-green-400 transition-colors flex items-center gap-1.5">
+                        <h4 className="text-sm font-bold text-zinc-900 dark:text-white group-hover/avatar:text-indigo-500 dark:group-hover/avatar:text-indigo-400 transition-colors flex items-center gap-1.5">
                           {dev.name}
                         </h4>
-                        <p className="text-xs text-green-600 dark:text-green-400 font-bold">
+                        <p className="text-xs text-indigo-600 dark:text-indigo-400 font-bold">
                           {dev.title}
                         </p>
                         <div className="flex items-center gap-1.5 text-[11px] text-zinc-400 dark:text-zinc-500 mt-0.5">
@@ -359,16 +364,47 @@ export default function DashboardView() {
 
                   </div>
 
-                  <div className="border-t border-zinc-100 dark:border-white/5 mt-5 pt-3.5 flex justify-between items-center">
+                  <div className="border-t border-zinc-150 dark:border-white/5 mt-5 pt-3.5 flex justify-between items-center">
                     <button
                       onClick={() => setSelectedProfileId(dev.id)}
-                      className="text-xs font-bold text-green-600 dark:text-green-400 hover:text-green-500 flex items-center gap-1 cursor-pointer transition-all"
+                      className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 flex items-center gap-1 cursor-pointer transition-all"
                     >
                       <span>Voir le profil</span>
                       <span className="transition-transform group-hover:translate-x-1">→</span>
                     </button>
                     
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-2">
+                      {/* Shortlist action button */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (shortlistedIds.includes(dev.id)) {
+                            removeFromShortlist(dev.id);
+                          } else {
+                            addToShortlist(dev.id);
+                          }
+                        }}
+                        className={`text-[10px] font-extrabold px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                          shortlistedIds.includes(dev.id)
+                            ? "bg-rose-500/15 text-rose-500 hover:bg-rose-500/25"
+                            : "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/25"
+                        }`}
+                      >
+                        <svg className="h-3 w-3 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2.5">
+                          {shortlistedIds.includes(dev.id) ? (
+                            <path d="M18 6 6 18M6 6l12 12" />
+                          ) : (
+                            <path d="M12 5v14M5 12h14" />
+                          )}
+                        </svg>
+                        <span>
+                          {shortlistedIds.includes(dev.id) 
+                            ? (language === "FR" ? "Retirer" : "Remove")
+                            : (language === "FR" ? "Sélectionner" : "Shortlist")
+                          }
+                        </span>
+                      </button>
+
                       {dev.github && (
                         <a
                           href={dev.github}
@@ -384,7 +420,7 @@ export default function DashboardView() {
                           href={dev.linkedin}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="p-1.5 rounded-lg text-zinc-400 hover:text-green-500 hover:bg-green-500/10 transition-colors"
+                          className="p-1.5 rounded-lg text-zinc-400 hover:text-indigo-500 hover:bg-indigo-500/10 transition-colors"
                         >
                           <Linkedin className="h-4 w-4" />
                         </a>
@@ -396,76 +432,6 @@ export default function DashboardView() {
             </div>
           )}
 
-        </div>
-
-        {/* Right Sidebar - Fil d'Actualité */}
-        <div className="lg:col-span-3 space-y-6">
-          <div className="bg-white dark:bg-[#09090b]/40 border border-zinc-200/60 dark:border-white/10 rounded-2xl p-5 space-y-4 shadow-sm">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-mono font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-green-500" />
-                {language === "FR" ? "Fil d'Actualité" : "Live Feed"}
-              </h3>
-              <span className="flex h-2 w-2 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-              </span>
-            </div>
-
-            <p className="text-[11px] text-zinc-500 leading-relaxed">
-              {language === "FR" 
-                ? "Découvrez l'activité récente de nos développeurs à travers l'Afrique."
-                : "Discover recent activities of our developers across Africa."}
-            </p>
-
-            <div className="space-y-3 max-h-[550px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-200 dark:scrollbar-thumb-zinc-800">
-              {activities.length === 0 ? (
-                <div className="text-center py-6 text-xs text-zinc-400 font-mono">
-                  {language === "FR" ? "Aucune actualité" : "No recent activity"}
-                </div>
-              ) : (
-                activities.slice(0, 10).map((act) => {
-                  let IconComponent = User;
-                  let iconColor = "text-blue-500 bg-blue-500/10";
-                  
-                  if (act.type === "join") {
-                    IconComponent = Sparkles;
-                    iconColor = "text-green-500 bg-green-500/10";
-                  } else if (act.type === "project") {
-                    IconComponent = Code;
-                    iconColor = "text-purple-500 bg-purple-500/10";
-                  } else if (act.type === "event_register") {
-                    IconComponent = Calendar;
-                    iconColor = "text-yellow-500 bg-yellow-500/10";
-                  } else if (act.type === "profile_update") {
-                    IconComponent = User;
-                    iconColor = "text-blue-500 bg-blue-500/10";
-                  }
-
-                  return (
-                    <div 
-                      key={act.id} 
-                      className="group p-3 rounded-xl bg-zinc-50 dark:bg-[#09090b]/60 border border-zinc-150 dark:border-white/5 hover:border-green-500/20 dark:hover:border-green-500/20 transition-all space-y-2 text-xs"
-                    >
-                      <div className="flex items-start gap-2.5">
-                        <div className={`p-1.5 rounded-lg shrink-0 ${iconColor}`}>
-                          <IconComponent className="h-3.5 w-3.5" />
-                        </div>
-                        <div className="space-y-1 min-w-0 flex-1">
-                          <p className="text-zinc-700 dark:text-zinc-200 leading-relaxed font-medium text-[11px]">
-                            {language === "FR" ? act.messageFr : act.messageEn}
-                          </p>
-                          <div className="flex items-center gap-1 text-[9px] text-zinc-400 font-mono">
-                            <span>{getShortFormattedDate(language, act.createdAt)}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
         </div>
 
       </div>

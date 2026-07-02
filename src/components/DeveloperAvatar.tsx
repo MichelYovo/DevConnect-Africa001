@@ -10,13 +10,12 @@ interface DeveloperAvatarProps {
 // Generate premium, aesthetic gradient colors based on name hash for unique visual identity
 function getGradientForName(name: string) {
   const gradients = [
-    "from-emerald-500 to-teal-600 text-emerald-100",
-    "from-green-400 to-emerald-600 text-green-100",
-    "from-yellow-400 to-orange-500 text-yellow-950",
-    "from-green-500 to-yellow-500 text-zinc-900",
-    "from-indigo-500 to-purple-600 text-indigo-100",
-    "from-blue-500 to-emerald-500 text-blue-100",
-    "from-zinc-700 to-zinc-900 text-zinc-100",
+    "from-indigo-500 to-blue-600 text-indigo-100",
+    "from-violet-500 to-indigo-600 text-violet-100",
+    "from-blue-500 to-sky-600 text-blue-100",
+    "from-purple-500 to-pink-600 text-purple-100",
+    "from-indigo-600 to-violet-700 text-indigo-100",
+    "from-slate-600 to-zinc-800 text-zinc-100",
   ];
   
   let hash = 0;
@@ -111,7 +110,7 @@ export default function DeveloperAvatar({ name, avatar, sizeClassName = "h-10 w-
           onError={handleError}
         />
       ) : (
-        <div className={`h-full w-full rounded-xl bg-gradient-to-br ${gradientClass} flex items-center justify-center font-display font-bold tracking-wider ring-1 ring-zinc-200/50 dark:ring-white/10 shadow-sm shadow-green-500/5`}>
+        <div className={`h-full w-full rounded-xl bg-gradient-to-br ${gradientClass} flex items-center justify-center font-display font-bold tracking-wider ring-1 ring-zinc-200/50 dark:ring-white/10 shadow-sm shadow-indigo-500/5`}>
           {initials}
         </div>
       )}

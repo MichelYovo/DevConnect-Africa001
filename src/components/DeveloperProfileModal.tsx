@@ -26,7 +26,11 @@ export default function DeveloperProfileModal() {
     events, 
     language,
     currentUser,
-    showToast
+    setView,
+    showToast,
+    shortlistedIds,
+    addToShortlist,
+    removeFromShortlist
   } = useApp();
 
   const [messageText, setMessageText] = useState("");
@@ -119,10 +123,10 @@ export default function DeveloperProfileModal() {
         id="dev-profile-modal"
       >
         {/* Banner with color flare */}
-        <div className="h-32 bg-gradient-to-r from-zinc-900 via-zinc-800 to-green-950 relative">
+        <div className="h-32 bg-gradient-to-r from-zinc-900 via-zinc-800 to-indigo-950 relative">
           <div className="absolute inset-0 bg-grid-white/[0.05] [mask-image:linear-gradient(t-bottom,white,transparent)]"></div>
           {/* Subtle color spot */}
-          <div className="absolute top-4 right-1/4 h-20 w-40 bg-green-500/10 blur-2xl rounded-full"></div>
+          <div className="absolute top-4 right-1/4 h-20 w-40 bg-indigo-500/10 blur-2xl rounded-full"></div>
           
           {/* Close button */}
           <button 
@@ -157,20 +161,57 @@ export default function DeveloperProfileModal() {
 
         {/* Modal Info Header */}
         <div className="pt-12 sm:pt-14 px-6 sm:px-8 pb-4 border-b border-zinc-100 dark:border-white/5 space-y-2">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h2 className="text-xl sm:text-2xl font-black tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
                 {profile.name}
+                {profile.email === "michelame.yovo@gmail.com" && (
+                  <span className="text-xs bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded font-bold font-mono border border-indigo-500/20">
+                    PRO
+                  </span>
+                )}
               </h2>
-              <p className="text-sm font-semibold text-green-600 dark:text-green-400">
+              <p className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
                 {profile.title}
               </p>
             </div>
             
-            {/* Location & flag */}
-            <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-              <MapPin className="h-3.5 w-3.5 text-yellow-500" />
-              <span>{profile.location}{getFlagForLocation(profile.location)}</span>
+            {/* Location & Shortlist Action */}
+            <div className="flex items-center gap-3 self-start sm:self-center">
+              <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+                <MapPin className="h-3.5 w-3.5 text-yellow-500" />
+                <span>{profile.location}{getFlagForLocation(profile.location)}</span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (shortlistedIds.includes(profile.id)) {
+                    removeFromShortlist(profile.id);
+                  } else {
+                    addToShortlist(profile.id);
+                  }
+                }}
+                className={`text-xs font-extrabold px-3.5 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-sm border ${
+                  shortlistedIds.includes(profile.id)
+                    ? "bg-rose-500/10 text-rose-500 border-rose-500/20 hover:bg-rose-500/25"
+                    : "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20 hover:bg-indigo-500/25"
+                }`}
+              >
+                <svg className="h-3.5 w-3.5 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2.5">
+                  {shortlistedIds.includes(profile.id) ? (
+                    <path d="M18 6 6 18M6 6l12 12" />
+                  ) : (
+                    <path d="M12 5v14M5 12h14" />
+                  )}
+                </svg>
+                <span>
+                  {shortlistedIds.includes(profile.id) 
+                    ? (language === "FR" ? "Retirer" : "Remove")
+                    : (language === "FR" ? "Ajouter au Panier" : "Add to Shortlist")
+                  }
+                </span>
+              </button>
             </div>
           </div>
 
@@ -178,7 +219,7 @@ export default function DeveloperProfileModal() {
           <div className="flex flex-wrap items-center gap-3 pt-1">
             <a 
               href={`mailto:${profile.email}`}
-              className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-green-500 dark:text-zinc-400 dark:hover:text-green-400 transition-colors"
+              className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-indigo-500 dark:text-zinc-400 dark:hover:text-indigo-400 transition-colors"
             >
               <Mail className="h-3.5 w-3.5" />
               <span className="font-mono">{profile.email}</span>
@@ -214,7 +255,7 @@ export default function DeveloperProfileModal() {
             onClick={() => setActiveTab("about")}
             className={`px-4 py-3 text-xs font-bold border-b-2 transition-all cursor-pointer ${
               activeTab === "about"
-                ? "border-green-500 text-green-600 dark:text-green-400"
+                ? "border-indigo-500 text-indigo-600 dark:text-indigo-400"
                 : "border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
             }`}
           >
@@ -224,7 +265,7 @@ export default function DeveloperProfileModal() {
             onClick={() => setActiveTab("projects")}
             className={`px-4 py-3 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${
               activeTab === "projects"
-                ? "border-green-500 text-green-600 dark:text-green-400"
+                ? "border-indigo-500 text-indigo-600 dark:text-indigo-400"
                 : "border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
             }`}
           >
@@ -238,7 +279,7 @@ export default function DeveloperProfileModal() {
             onClick={() => setActiveTab("events")}
             className={`px-4 py-3 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${
               activeTab === "events"
-                ? "border-green-500 text-green-600 dark:text-green-400"
+                ? "border-indigo-500 text-indigo-600 dark:text-indigo-400"
                 : "border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
             }`}
           >
@@ -252,14 +293,14 @@ export default function DeveloperProfileModal() {
             onClick={() => setActiveTab("chat")}
             className={`px-4 py-3 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${
               activeTab === "chat"
-                ? "border-green-500 text-green-600 dark:text-green-400"
+                ? "border-indigo-500 text-indigo-600 dark:text-indigo-400"
                 : "border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
             }`}
           >
-            <MessageSquare className="h-3.5 w-3.5 text-green-500" />
+            <MessageSquare className="h-3.5 w-3.5 text-indigo-500" />
             {language === "FR" ? "Discuter" : "Chat"}
             {chatHistory.length > 0 && (
-              <span className="h-2 w-2 rounded-full bg-green-500"></span>
+              <span className="h-2 w-2 rounded-full bg-indigo-500"></span>
             )}
           </button>
         </div>
@@ -274,7 +315,7 @@ export default function DeveloperProfileModal() {
               {/* Bio block */}
               <div className="space-y-2">
                 <h3 className="text-xs font-mono font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
-                  <Briefcase className="h-3.5 w-3.5 text-green-500" />
+                  <Briefcase className="h-3.5 w-3.5 text-indigo-500" />
                   {language === "FR" ? "BIOGRAPHIE" : "BIOGRAPHY"}
                 </h3>
                 <p className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed bg-zinc-50 dark:bg-black/30 p-4 rounded-2xl border border-zinc-100 dark:border-white/5">
@@ -292,7 +333,7 @@ export default function DeveloperProfileModal() {
                   {profile.skills.map((skill, idx) => (
                     <span 
                       key={idx}
-                      className="text-xs font-mono font-semibold px-3 py-1 rounded-xl bg-green-500/5 text-green-600 dark:text-green-400 border border-green-500/10"
+                      className="text-xs font-mono font-semibold px-3 py-1 rounded-xl bg-indigo-500/5 text-indigo-600 dark:text-indigo-400 border border-indigo-500/10"
                     >
                       {skill}
                     </span>
@@ -339,7 +380,7 @@ export default function DeveloperProfileModal() {
                   {devProjects.map((proj) => (
                     <div 
                       key={proj.id} 
-                      className="p-4 rounded-2xl border border-zinc-200/80 dark:border-white/10 bg-zinc-50/50 dark:bg-[#0f0f11]/30 hover:border-green-500/20 dark:hover:border-green-500/20 transition-all flex flex-col justify-between"
+                      className="p-4 rounded-2xl border border-zinc-200/80 dark:border-white/10 bg-zinc-50/50 dark:bg-[#0f0f11]/30 hover:border-indigo-500/20 dark:hover:border-indigo-500/20 transition-all flex flex-col justify-between"
                     >
                       <div>
                         <h4 className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-white flex justify-between items-center">
@@ -429,61 +470,96 @@ export default function DeveloperProfileModal() {
           {activeTab === "chat" && (
             <div className="flex flex-col h-full max-h-[350px] animate-in fade-in duration-150">
               <div className="flex-1 overflow-y-auto mb-4 space-y-3 pr-1 min-h-[160px] scrollbar-thin">
-                {chatHistory.length === 0 ? (
-                  <div className="text-center py-8 text-xs text-zinc-400 dark:text-zinc-500 space-y-2">
-                    <MessageSquare className="h-8 w-8 mx-auto text-zinc-300" />
-                    <p>
-                      {language === "FR" 
-                        ? `Envoyez un message direct à ${profile.name} pour démarrer une collaboration !` 
-                        : `Send a direct message to ${profile.name} to start collaborating!`}
-                    </p>
+                {/* Simulated default public greetings for visitors to see the message */}
+                <div className="flex flex-col items-start">
+                  <div className="max-w-[80%] rounded-2xl px-4 py-2.5 text-xs bg-zinc-100 dark:bg-[#1a1a1e] text-zinc-900 dark:text-zinc-200 rounded-tl-none border dark:border-white/5">
+                    {language === "FR" 
+                      ? `Bonjour ! Ravi d'entrer en contact avec vous sur DevConnect Africa. J'ai vu vos projets et vos compétences et je serais super intéressé d'en discuter pour une future collaboration !` 
+                      : `Hello! Great to connect with you on DevConnect Africa. I saw your tech profile and projects and would be super interested to discuss a potential collaboration!`}
                   </div>
-                ) : (
-                  chatHistory.map((chat, idx) => (
-                    <div 
-                      key={idx}
-                      className={`flex flex-col ${chat.sender === "me" ? "items-end" : "items-start"}`}
-                    >
-                      <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-xs ${
-                        chat.sender === "me"
-                          ? "bg-green-500 text-black font-semibold rounded-tr-none"
-                          : "bg-zinc-100 dark:bg-[#1a1a1e] text-zinc-900 dark:text-zinc-200 rounded-tl-none border dark:border-white/5"
-                      }`}>
-                        {chat.text}
-                      </div>
-                      <span className="text-[9px] text-zinc-400 font-mono mt-0.5 px-1">{chat.time}</span>
+                  <span className="text-[9px] text-zinc-400 font-mono mt-0.5 px-1">10:45</span>
+                </div>
+
+                {currentUser && chatHistory.map((chat, idx) => (
+                  <div 
+                    key={idx}
+                    className={`flex flex-col ${chat.sender === "me" ? "items-end" : "items-start"}`}
+                  >
+                    <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-xs ${
+                      chat.sender === "me"
+                        ? "bg-indigo-600 text-white font-semibold rounded-tr-none"
+                        : "bg-zinc-100 dark:bg-[#1a1a1e] text-zinc-900 dark:text-zinc-200 rounded-tl-none border dark:border-white/5"
+                    }`}>
+                      {chat.text}
                     </div>
-                  ))
-                )}
-                {isSending && (
+                    <span className="text-[9px] text-zinc-400 font-mono mt-0.5 px-1">{chat.time}</span>
+                  </div>
+                ))}
+                
+                {currentUser && isSending && (
                   <div className="flex items-center gap-1.5 text-zinc-400 dark:text-zinc-500 text-xs px-2 font-mono">
-                    <span className="h-1 w-1 rounded-full bg-green-500 animate-ping"></span>
+                    <span className="h-1 w-1 rounded-full bg-indigo-500 animate-ping"></span>
                     <span>{profile.name} {language === "FR" ? "écrit..." : "is typing..."}</span>
                   </div>
                 )}
               </div>
 
-              {/* Message send form */}
-              <form onSubmit={handleSendMessage} className="flex gap-2 border-t border-zinc-100 dark:border-white/5 pt-3">
-                <input 
-                  type="text" 
-                  value={messageText}
-                  onChange={(e) => setMessageText(e.target.value)}
-                  placeholder={
-                    language === "FR" 
-                      ? `Écrire à ${profile.name}...` 
-                      : `Write to ${profile.name}...`
-                  }
-                  className="flex-1 bg-zinc-50 dark:bg-[#111113] border dark:border-white/10 rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-green-500 focus:bg-white text-zinc-900 dark:text-white"
-                />
-                <button
-                  type="submit"
-                  disabled={!messageText.trim() || isSending}
-                  className="p-2.5 rounded-xl bg-green-500 text-black hover:bg-green-400 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shrink-0 shadow-md shadow-green-500/15"
-                >
-                  <Send className="h-3.5 w-3.5" />
-                </button>
-              </form>
+              {/* Message send form / Connection Guard */}
+              {!currentUser ? (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-zinc-50 dark:bg-[#111113] border border-zinc-200/80 dark:border-white/10 rounded-2xl">
+                  <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400">
+                    <svg className="h-4 w-4 text-indigo-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    <span className="text-xs font-semibold leading-tight text-left">
+                      {language === "FR" 
+                        ? `Connectez-vous pour débloquer l'envoi de messages à ${profile.name}.` 
+                        : `Log in to unlock sending direct replies to ${profile.name}.`}
+                    </span>
+                  </div>
+                  <div className="flex gap-2 shrink-0">
+                    <button
+                      onClick={() => {
+                        setSelectedProfileId(null);
+                        setView("login");
+                      }}
+                      className="px-3.5 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition-all shadow-sm shadow-indigo-600/15 cursor-pointer"
+                    >
+                      {language === "FR" ? "Se Connecter" : "Log In"}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSelectedProfileId(null);
+                        setView("register");
+                      }}
+                      className="px-3.5 py-2 text-xs font-bold border border-zinc-200 dark:border-white/10 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-xl transition-all text-zinc-700 dark:text-zinc-300 cursor-pointer"
+                    >
+                      {language === "FR" ? "S'inscrire" : "Sign Up"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={handleSendMessage} className="flex gap-2 border-t border-zinc-100 dark:border-white/5 pt-3">
+                  <input 
+                    type="text" 
+                    value={messageText}
+                    onChange={(e) => setMessageText(e.target.value)}
+                    placeholder={
+                      language === "FR" 
+                        ? `Écrire à ${profile.name}...` 
+                        : `Write to ${profile.name}...`
+                    }
+                    className="flex-1 bg-zinc-50 dark:bg-[#111113] border dark:border-white/10 rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-indigo-500 focus:bg-white text-zinc-900 dark:text-white"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!messageText.trim() || isSending}
+                    className="p-2.5 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shrink-0 shadow-md shadow-indigo-600/15"
+                  >
+                    <Send className="h-3.5 w-3.5" />
+                  </button>
+                </form>
+              )}
             </div>
           )}
 

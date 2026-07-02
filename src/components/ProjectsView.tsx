@@ -49,9 +49,8 @@ export default function ProjectsView() {
 
   // Oracle and Pitch Deck states
   const [expandedOracleProjId, setExpandedOracleProjId] = useState<string | null>(null);
-  const [activeTabMap, setActiveTabMap] = useState<Record<string, "stack" | "pitch">>({});
+  const [projectTabs, setProjectTabs] = useState<Record<string, "stack" | "pitch">>({});
   const [loadingOracleProjId, setLoadingOracleProjId] = useState<string | null>(null);
-  const [currentSlideMap, setCurrentSlideMap] = useState<Record<string, number>>({});
   
   const [useOracleOnCreate, setUseOracleOnCreate] = useState(false);
   const [isGeneratingOnCreate, setIsGeneratingOnCreate] = useState(false);
@@ -139,8 +138,8 @@ export default function ProjectsView() {
         techStack: [...new Set([...projTech, ...(data.suggestedTags || [])])]
       });
       
-      // Set active tab to stack
-      setActiveTabMap(prev => ({ ...prev, [projId]: "stack" }));
+      // Set active tab to stack for this project
+      setProjectTabs(prev => ({ ...prev, [projId]: "stack" }));
       // Open the oracle view for this project
       setExpandedOracleProjId(projId);
     } catch (err: any) {
@@ -348,9 +347,6 @@ export default function ProjectsView() {
             const authorCity = authorProfile ? authorProfile.location : "Lomé";
             const isMyProject = currentUser && proj.authorId === currentUser.id;
 
-            const activeTab = activeTabMap[proj.id] || "stack";
-            const slides = parseSlides(proj.pitchDeck);
-            const currentSlide = currentSlideMap[proj.id] || 0;
             const hasOracle = proj.techStackIdeal || proj.pitchDeck;
             const isExpanded = expandedOracleProjId === proj.id;
 
@@ -486,9 +482,8 @@ export default function ProjectsView() {
                         setExpandedOracleProjId(null);
                       } else {
                         setExpandedOracleProjId(proj.id);
-                        // Reset this project's slide and active tab state to their initials when opening
-                        setCurrentSlideMap(prev => ({ ...prev, [proj.id]: 0 }));
-                        setActiveTabMap(prev => ({ ...prev, [proj.id]: "stack" }));
+                        // Safely reset the current active tab to the initial "stack" view upon expansion
+                        setProjectTabs(prev => ({ ...prev, [proj.id]: "stack" }));
                       }
                     }}
                     className="w-full py-2 px-3 rounded-xl bg-zinc-50 dark:bg-[#09090b]/60 border border-zinc-200/50 dark:border-white/5 flex items-center justify-between text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:border-green-500/20 dark:hover:border-green-500/30 transition-all cursor-pointer"
@@ -509,9 +504,9 @@ export default function ProjectsView() {
                           {/* Tabs header */}
                           <div className="flex border-b border-zinc-100 dark:border-white/5">
                             <button
-                              onClick={() => setActiveTabMap(prev => ({ ...prev, [proj.id]: "stack" }))}
+                              onClick={() => setProjectTabs(prev => ({ ...prev, [proj.id]: "stack" }))}
                               className={`flex-1 py-2 text-center text-xs font-bold border-b-2 transition-all cursor-pointer ${
-                                activeTab === "stack"
+                                (projectTabs[proj.id] || "stack") === "stack"
                                   ? "border-green-500 text-green-600 dark:text-green-400"
                                   : "border-transparent text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
                               }`}
@@ -519,56 +514,29 @@ export default function ProjectsView() {
                               Stack Idéale (Oracle)
                             </button>
                             <button
-                              onClick={() => setActiveTabMap(prev => ({ ...prev, [proj.id]: "pitch" }))}
+                              onClick={() => setProjectTabs(prev => ({ ...prev, [proj.id]: "pitch" }))}
                               className={`flex-1 py-2 text-center text-xs font-bold border-b-2 transition-all cursor-pointer ${
-                                activeTab === "pitch"
+                                (projectTabs[proj.id] || "stack") === "pitch"
                                   ? "border-green-500 text-green-600 dark:text-green-400"
                                   : "border-transparent text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
                               }`}
                             >
-                              Pitch Deck (Slides)
+                              Pitch Deck (Paragraphs)
                             </button>
                           </div>
 
                           {/* Tab Content */}
-                          {activeTab === "stack" ? (
+                          {(projectTabs[proj.id] || "stack") === "stack" ? (
                             <div className="p-3 bg-zinc-50 dark:bg-zinc-950/40 rounded-xl border border-zinc-200/40 dark:border-white/5 text-xs text-zinc-600 dark:text-zinc-300 space-y-2 max-h-72 overflow-y-auto scrollbar-thin">
                               <div className="markdown-body prose prose-sm dark:prose-invert">
                                 <ReactMarkdown>{proj.techStackIdeal || ""}</ReactMarkdown>
                               </div>
                             </div>
                           ) : (
-                            <div className="space-y-3">
-                              {slides.length > 0 ? (
-                                <div className="p-5 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-white/10 min-h-48 flex flex-col justify-between relative overflow-hidden text-zinc-800 dark:text-zinc-100 shadow-sm">
-                                  <div className="absolute top-2 right-3 text-[10px] font-mono font-bold text-green-600 dark:text-green-400">
-                                    SLIDE {currentSlide + 1} / {slides.length}
-                                  </div>
-                                  <div className="markdown-body prose prose-sm dark:prose-invert text-xs sm:text-sm mt-3 flex-1 text-zinc-800 dark:text-zinc-100">
-                                    <ReactMarkdown>{slides[currentSlide]}</ReactMarkdown>
-                                  </div>
-                                  <div className="flex justify-between items-center mt-4 pt-3 border-t border-zinc-100 dark:border-white/5">
-                                    <button
-                                      disabled={currentSlide === 0}
-                                      onClick={() => setCurrentSlideMap(prev => ({ ...prev, [proj.id]: Math.max(0, currentSlide - 1) }))}
-                                      className="px-2.5 py-1.5 rounded-lg bg-zinc-100 dark:bg-white/5 hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-30 text-[10px] font-bold text-zinc-700 dark:text-zinc-300 cursor-pointer transition-colors"
-                                    >
-                                      ◀ Précédent
-                                    </button>
-                                    <button
-                                      disabled={currentSlide === slides.length - 1}
-                                      onClick={() => setCurrentSlideMap(prev => ({ ...prev, [proj.id]: Math.min(slides.length - 1, currentSlide + 1) }))}
-                                      className="px-2.5 py-1.5 rounded-lg bg-green-500 text-black hover:bg-green-400 disabled:opacity-30 text-[10px] font-bold cursor-pointer transition-colors"
-                                    >
-                                      Suivant ▶
-                                    </button>
-                                  </div>
-                                </div>
-                              ) : (
-                                <div className="p-3 text-center text-xs text-zinc-400 bg-zinc-50 dark:bg-zinc-950/40 rounded-xl border border-zinc-200/40 dark:border-white/5">
-                                  Aucun slide de Pitch Deck disponible.
-                                </div>
-                              )}
+                            <div className="p-4 bg-zinc-50 dark:bg-zinc-950/40 rounded-xl border border-zinc-200/40 dark:border-white/5 text-xs text-zinc-600 dark:text-zinc-300 space-y-3 max-h-96 overflow-y-auto scrollbar-thin">
+                              <div className="markdown-body prose prose-sm dark:prose-invert text-xs sm:text-sm text-zinc-800 dark:text-zinc-200 leading-relaxed font-sans space-y-3">
+                                <ReactMarkdown>{cleanHtmlTags(proj.pitchDeck || "")}</ReactMarkdown>
+                              </div>
                             </div>
                           )}
                         </div>

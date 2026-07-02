@@ -27,7 +27,9 @@ export default function Header() {
     setTheme, 
     currentView, 
     setView, 
-    logout 
+    logout,
+    shortlistedIds,
+    setIsCartOpen
   } = useApp();
 
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
@@ -48,17 +50,17 @@ export default function Header() {
       <div className="relative rounded-[32px] border border-zinc-200/60 dark:border-white/10 bg-white/70 dark:bg-black/75 backdrop-blur-xl shadow-xl shadow-zinc-100/10 dark:shadow-black/40 overflow-hidden px-5 sm:px-8 py-3.5 sm:py-4">
         
         {/* Abstract subtle color flare behind the header inside its boundaries */}
-        <div className="absolute top-0 right-1/4 h-16 w-32 bg-green-500/5 dark:bg-green-500/10 blur-2xl pointer-events-none"></div>
-        <div className="absolute bottom-0 left-1/3 h-12 w-24 bg-yellow-500/5 dark:bg-yellow-500/5 blur-xl pointer-events-none"></div>
+        <div className="absolute top-0 right-1/4 h-16 w-32 bg-indigo-500/5 dark:bg-indigo-500/10 blur-2xl pointer-events-none"></div>
+        <div className="absolute bottom-0 left-1/3 h-12 w-24 bg-blue-500/5 dark:bg-blue-500/5 blur-xl pointer-events-none"></div>
 
         <div className="flex items-center justify-between relative z-10">
           
           {/* Logo & Brand */}
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => setView("landing")}>
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#0a0a0a] dark:bg-[#000000] border border-green-500/30 text-green-500 shadow-md shadow-green-500/15 relative overflow-hidden group">
-              <div className="absolute inset-0 bg-green-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#0a0a0a] dark:bg-[#000000] border border-indigo-500/30 text-indigo-500 shadow-md shadow-indigo-500/15 relative overflow-hidden group">
+              <div className="absolute inset-0 bg-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
               {/* Elegant dynamic connecting dots node logo */}
-              <svg className="h-5 w-5 stroke-green-500 stroke-[2] fill-none" viewBox="0 0 24 24">
+              <svg className="h-5 w-5 stroke-indigo-500 stroke-[2] fill-none" viewBox="0 0 24 24">
                 <circle cx="12" cy="5" r="2" fill="currentColor" />
                 <circle cx="5" cy="12" r="2" fill="currentColor" />
                 <circle cx="19" cy="12" r="2" fill="currentColor" />
@@ -67,8 +69,8 @@ export default function Header() {
               </svg>
             </div>
             <div>
-              <span className="text-sm sm:text-base font-extrabold tracking-tight text-zinc-900 dark:text-white font-sans flex items-center gap-1">
-                DevConnect <span className="bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent font-black">Africa</span>
+              <span className="text-sm sm:text-base font-extrabold tracking-tight text-zinc-900 dark:text-white font-display flex items-center gap-1">
+                DevConnect <span className="bg-gradient-to-r from-indigo-400 to-blue-500 bg-clip-text text-transparent font-black">Africa</span>
               </span>
             </div>
           </div>
@@ -81,7 +83,7 @@ export default function Header() {
                   onClick={() => setView("dashboard")}
                   className={`px-4 py-2 text-xs sm:text-[13px] font-bold rounded-full transition-all cursor-pointer ${
                     currentView === "dashboard" 
-                      ? "bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20" 
+                      ? "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20" 
                       : "text-zinc-600 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white border border-transparent hover:bg-zinc-100/50 dark:hover:bg-zinc-900/50"
                   }`}
                 >
@@ -92,7 +94,7 @@ export default function Header() {
                   onClick={() => setView("profile")}
                   className={`px-4 py-2 text-xs sm:text-[13px] font-bold rounded-full transition-all cursor-pointer ${
                     currentView === "profile" 
-                      ? "bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20" 
+                      ? "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20" 
                       : "text-zinc-600 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white border border-transparent hover:bg-zinc-100/50 dark:hover:bg-zinc-900/50"
                   }`}
                 >
@@ -103,7 +105,7 @@ export default function Header() {
                   onClick={() => setView("projects")}
                   className={`px-4 py-2 text-xs sm:text-[13px] font-bold rounded-full transition-all cursor-pointer ${
                     currentView === "projects" 
-                      ? "bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20" 
+                      ? "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20" 
                       : "text-zinc-600 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white border border-transparent hover:bg-zinc-100/50 dark:hover:bg-zinc-900/50"
                   }`}
                 >
@@ -114,7 +116,7 @@ export default function Header() {
                   onClick={() => setView("events")}
                   className={`px-4 py-2 text-xs sm:text-[13px] font-bold rounded-full transition-all cursor-pointer ${
                     currentView === "events" 
-                      ? "bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20" 
+                      ? "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20" 
                       : "text-zinc-600 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white border border-transparent hover:bg-zinc-100/50 dark:hover:bg-zinc-900/50"
                   }`}
                 >
@@ -125,7 +127,7 @@ export default function Header() {
                   onClick={() => setView("settings")}
                   className={`px-4 py-2 text-xs sm:text-[13px] font-bold rounded-full transition-all cursor-pointer ${
                     currentView === "settings" 
-                      ? "bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20" 
+                      ? "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20" 
                       : "text-zinc-600 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white border border-transparent hover:bg-zinc-100/50 dark:hover:bg-zinc-900/50"
                   }`}
                 >
@@ -186,6 +188,25 @@ export default function Header() {
 
           {/* Right Side Settings & User Actions */}
           <div className="hidden md:flex items-center gap-3">
+            
+            {/* Shortlist Selection Cart */}
+            <button
+              onClick={() => setIsCartOpen(true)}
+              className="relative p-2 rounded-full border border-zinc-200 dark:border-white/10 bg-zinc-100/50 dark:bg-[#09090b] hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-600 dark:text-zinc-300 hover:text-green-500 dark:hover:text-green-400 transition-all cursor-pointer flex items-center justify-center h-8 w-8"
+              title={language === "FR" ? "Ma Sélection de Talents" : "My Talent Shortlist"}
+            >
+              <svg className="h-4 w-4 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="2.2">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              </svg>
+              {shortlistedIds.length > 0 && (
+                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-green-500 text-[9px] font-black text-black absolute -top-1.5 -right-1.5 shadow-sm shadow-green-500/35">
+                  {shortlistedIds.length}
+                </span>
+              )}
+            </button>
             
             {/* Language Toggle */}
             <div className="flex items-center gap-0.5 rounded-full border border-zinc-200 dark:border-white/10 p-0.5 bg-zinc-100/50 dark:bg-[#09090b]">
@@ -414,6 +435,23 @@ export default function Header() {
           </div>
 
           <hr className="border-zinc-200 dark:border-white/5" />
+
+          {/* Mobile Selection trigger */}
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-zinc-500 dark:text-zinc-400">
+              {language === "FR" ? "Ma Sélection :" : "My Selection:"}
+            </span>
+            <button
+              onClick={() => { setIsCartOpen(true); setMobileMenuOpen(false); }}
+              className="flex items-center gap-1.5 px-3 py-1 text-xs font-extrabold rounded-xl border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-[#09090b] text-zinc-700 dark:text-zinc-300"
+            >
+              <svg className="h-3.5 w-3.5 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="2.2">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+              </svg>
+              <span>{shortlistedIds.length} talent(s)</span>
+            </button>
+          </div>
 
           {/* Mobile Preferences */}
           <div className="flex items-center justify-between">

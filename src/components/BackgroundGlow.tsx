@@ -29,14 +29,14 @@ export default function BackgroundGlow() {
       
       {/* 1. Standard Static/Ambient CSS grid lines overlay */}
       <div 
-        className="absolute inset-0 bg-[linear-gradient(to_right,#e5e7eb_1px,transparent_1px),linear-gradient(to_bottom,#e5e7eb_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(24,24,27,0.85)_1px,transparent_1px),linear-gradient(to_bottom,rgba(24,24,27,0.85)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_80%,transparent_100%)]"
-        style={{ opacity: 0.7 }}
+        className="absolute inset-0 bg-[linear-gradient(to_right,#e5e7eb_1px,transparent_1px),linear-gradient(to_bottom,#e5e7eb_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(99,102,241,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(99,102,241,0.03)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_70%_65%_at_50%_0%,#000_80%,transparent_100%)]"
+        style={{ opacity: 0.8 }}
       />
 
-      {/* 2. Interactive Spotlight highlighting the grid cells (The "Anti-Gravité" and "LoopAudit" glow feel) */}
+      {/* 2. Interactive Spotlight highlighting the grid cells */}
       {isHovering && (
         <div 
-          className="absolute inset-0 bg-[linear-gradient(to_right,rgba(34,197,94,0.12)_1.5px,transparent_1.5px),linear-gradient(to_bottom,rgba(34,197,94,0.12)_1.5px,transparent_1.5px)] bg-[size:4rem_4rem] transition-all duration-300 ease-out"
+          className="absolute inset-0 bg-[linear-gradient(to_right,rgba(99,102,241,0.05)_1.5px,transparent_1.5px),linear-gradient(to_bottom,rgba(99,102,241,0.05)_1.5px,transparent_1.5px)] bg-[size:4rem_4rem] transition-all duration-300 ease-out"
           style={{
             maskImage: `radial-gradient(280px circle at ${mousePos.x}px ${mousePos.y}px, black, transparent)`,
             WebkitMaskImage: `radial-gradient(280px circle at ${mousePos.x}px ${mousePos.y}px, black, transparent)`,
@@ -47,18 +47,18 @@ export default function BackgroundGlow() {
       {/* 3. Smooth cursor following glowing radial backdrop spotlight */}
       {isHovering && (
         <>
-          {/* Main bright green core spotlight */}
+          {/* Main bright indigo core spotlight */}
           <div 
             className="absolute inset-0 transition-opacity duration-500 ease-out"
             style={{
-              background: `radial-gradient(350px circle at ${mousePos.x}px ${mousePos.y}px, rgba(34, 197, 94, 0.07), transparent 80%)`,
+              background: `radial-gradient(350px circle at ${mousePos.x}px ${mousePos.y}px, rgba(99, 102, 241, 0.03), transparent 80%)`,
             }}
           />
-          {/* Secondary gold/emerald micro accent trail spotlight for contrast */}
+          {/* Secondary blue micro accent trail spotlight for contrast */}
           <div 
             className="absolute inset-0 transition-opacity duration-700 ease-out"
             style={{
-              background: `radial-gradient(150px circle at ${mousePos.x}px ${mousePos.y}px, rgba(234, 179, 8, 0.03), transparent 70%)`,
+              background: `radial-gradient(150px circle at ${mousePos.x}px ${mousePos.y}px, rgba(59, 130, 246, 0.015), transparent 70%)`,
             }}
           />
         </>
@@ -66,7 +66,7 @@ export default function BackgroundGlow() {
 
       {/* 4. Animated glowing fluid gradient spots (Slow moving) */}
       <div className="absolute inset-0 flex items-center justify-center">
-        {/* Spot 1: Mint Green Orb */}
+        {/* Spot 1: Blue/Indigo Orb */}
         <motion.div
           animate={{
             x: [-40, 40, -40],
@@ -78,10 +78,10 @@ export default function BackgroundGlow() {
             repeat: Infinity,
             ease: "easeInOut",
           }}
-          className="absolute top-[-10%] left-[20%] w-[35rem] h-[35rem] rounded-full bg-green-500/5 dark:bg-green-500/[0.04] blur-[120px]"
+          className="absolute top-[-10%] left-[20%] w-[35rem] h-[35rem] rounded-full bg-indigo-500/[0.03] dark:bg-indigo-500/[0.02] blur-[120px]"
         />
 
-        {/* Spot 2: Gold/Yellow Orb */}
+        {/* Spot 2: Slate/Silver Orb */}
         <motion.div
           animate={{
             x: [40, -40, 40],
@@ -93,10 +93,10 @@ export default function BackgroundGlow() {
             repeat: Infinity,
             ease: "easeInOut",
           }}
-          className="absolute top-[20%] right-[15%] w-[30rem] h-[30rem] rounded-full bg-yellow-500/[0.03] dark:bg-yellow-500/[0.015] blur-[100px]"
+          className="absolute top-[20%] right-[15%] w-[30rem] h-[30rem] rounded-full bg-slate-500/[0.015] dark:bg-slate-500/[0.008] blur-[100px]"
         />
 
-        {/* Spot 3: Subtle Teal/Emerald Ambient */}
+        {/* Spot 3: Subtle Cool Blue Ambient */}
         <motion.div
           animate={{
             x: [-20, 20, -20],
@@ -107,7 +107,7 @@ export default function BackgroundGlow() {
             repeat: Infinity,
             ease: "easeInOut",
           }}
-          className="absolute bottom-[10%] left-[30%] w-[25rem] h-[25rem] rounded-full bg-emerald-500/[0.03] dark:bg-emerald-500/[0.015] blur-[90px]"
+          className="absolute bottom-[10%] left-[30%] w-[25rem] h-[25rem] rounded-full bg-blue-500/[0.02] dark:bg-blue-500/[0.01] blur-[90px]"
         />
       </div>
 
@@ -125,7 +125,7 @@ export default function BackgroundGlow() {
         ].map((p, i) => (
           <motion.div
             key={i}
-            className="absolute h-1 w-1 rounded-full bg-green-500/25 dark:bg-green-400/40 blur-[0.4px]"
+            className="absolute h-1 w-1 rounded-full bg-indigo-500/20 dark:bg-indigo-400/20 blur-[0.4px]"
             style={{
               top: p.top,
               left: p.left,

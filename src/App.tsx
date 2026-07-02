@@ -12,6 +12,7 @@ import SupabaseSqlView from "./components/SupabaseSqlView";
 import AdminView from "./components/AdminView";
 import BackgroundGlow from "./components/BackgroundGlow";
 import DeveloperProfileModal from "./components/DeveloperProfileModal";
+import RecruitmentCart from "./components/RecruitmentCart";
 import { 
   X, 
   MapPin, 
@@ -20,7 +21,8 @@ import {
   HelpCircle,
   Database,
   ArrowUpRight,
-  Shield
+  Shield,
+  Heart
 } from "lucide-react";
 
 function MainAppContent() {
@@ -70,6 +72,9 @@ function MainAppContent() {
 
       {/* Profile Details Modal */}
       <DeveloperProfileModal />
+
+      {/* Recruitment Shortlist Cart */}
+      <RecruitmentCart />
 
       {/* Modern, high-craft Footer */}
       <footer className="border-t border-zinc-200/60 dark:border-white/5 bg-white dark:bg-[#09090b]/40 py-12 text-xs text-zinc-500 dark:text-zinc-400">
@@ -145,7 +150,11 @@ function MainAppContent() {
               &copy; {new Date().getFullYear()} DevConnect Africa. Tous droits réservés.
             </span>
             <div className="flex gap-3">
-              <span>Made with 🌍 Excellence</span>
+              <span className="flex items-center gap-1">
+                <span>Made with</span>
+                <Heart className="h-3.5 w-3.5 text-red-500 fill-red-500 animate-pulse shrink-0" />
+                <span>Excellence</span>
+              </span>
               <span>•</span>
               <a 
                 href="https://supabase.com" 
